@@ -537,7 +537,9 @@ function stopSpeaking(){ if (synthOK) try{ speechSynthesis.cancel(); }catch(e){}
 
 /* ================= Speech recognition (microphone) ================= */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let micBlocked = !SR || !!(window.claude && typeof window.claude.use === "function");
+const IN_CLAUDE = !!(window.claude && typeof window.claude.use === "function");
+const WEB_LINK = "https://vuongkhangbio-art.github.io/talk-club/";
+let micBlocked = !SR || IN_CLAUDE;
 let rec = null;
 function listen({lang, onInterim, onDone, onFail}){
   if (!SR){ onFail("unsupported"); return null; }
@@ -551,6 +553,8 @@ function listen({lang, onInterim, onDone, onFail}){
   return r;
 }
 function micErrorText(code){
+  if (!IN_CLAUDE && (code==="not-allowed"||code==="audio-capture"))
+    return "Trình duyệt đang chặn micro. Bấm biểu tượng ổ khoá cạnh địa chỉ web, chọn Micro > Cho phép, rồi tải lại trang.";
   if (code==="not-allowed"||code==="service-not-allowed"||code==="audio-capture"||code==="start"||code==="unsupported")
     return "Trang này chưa dùng được micro trực tiếp. Hãy bấm biểu tượng micro trên bàn phím điện thoại (hoặc Windows + H trên máy tính) để nói vào ô chữ.";
   if (code==="no-speech") return "Chưa nghe thấy giọng. Bấm micro và nói lại nhé.";
@@ -881,9 +885,15 @@ function showHint(){
   const live = $("#live"); live.textContent = "Bạn có thể nói: “" + hint + "”";
   speak(hint, state.c, {rate:0.85});
 }
-function useKeyboardMic(){
-  state.typing = true; renderTypeRow(true);
-  const live = $("#live"); if (live) live.textContent = "Chạm nút micro trên bàn phím vừa hiện ra để nói (máy tính: Windows + H), rồi bấm Gửi.";
+function useKeyboardMic(keepMsg){
+  state.typing = true; renderTypeRow(!keepMsg);
+  const live = $("#live"); if (!live || keepMsg) return;
+  live.textContent = "";
+  if (IN_CLAUDE){
+    live.append("Trong Claude, micro trực tiếp bị chặn. Muốn bấm là nói luôn, mở app bằng link: ");
+    const a = el("a",{href:WEB_LINK,target:"_blank",rel:"noopener"}, WEB_LINK); live.append(a);
+    live.append(". Hoặc chạm micro trên bàn phím điện thoại (máy tính: Windows + H).");
+  } else live.textContent = "Trình duyệt này chưa hỗ trợ micro trực tiếp. Hãy mở bằng Chrome, Edge hoặc Safari.";
 }
 function toggleMic(){
   if (state.busy) return;
@@ -898,7 +908,7 @@ function toggleMic(){
     onInterim: t => { live.textContent = t; },
     onDone: (t, conf) => { reset(); if (t) { live.textContent = ""; sendUser(t, true, conf); } else live.textContent = "Chưa nghe thấy giọng. Bấm micro và nói lại nhé."; },
     onFail: code => { reset(); const msg = micErrorText(code); live.textContent = msg;
-      if (["not-allowed","service-not-allowed","audio-capture","start","unsupported"].includes(code)){ micBlocked = true; useKeyboardMic(); } }
+      if (["not-allowed","service-not-allowed","audio-capture","start","unsupported"].includes(code)){ if (IN_CLAUDE || !["not-allowed","audio-capture"].includes(code)) micBlocked = true; useKeyboardMic(true); } }
   });
 }
 async function sendUser(text, viaVoice, conf){
@@ -967,7 +977,7 @@ function openShadow(target){
     r2 = listen({lang: settings.recLang==="char" ? ACCENTS[c.acc].lang : settings.recLang,
       onInterim: t => live.textContent = t,
       onDone: t => { done(); live.textContent = ""; if (t) grade(t); else live.textContent = "Chưa nghe thấy giọng, thử lại nhé."; },
-      onFail: code => { done(); live.textContent = micErrorText(code); if (["not-allowed","service-not-allowed","audio-capture","start","unsupported"].includes(code)){ micBlocked = true; typeForm.hidden = false; tin.focus(); } }});
+      onFail: code => { done(); live.textContent = micErrorText(code); if (["not-allowed","service-not-allowed","audio-capture","start","unsupported"].includes(code)){ if (IN_CLAUDE || !["not-allowed","audio-capture"].includes(code)) micBlocked = true; typeForm.hidden = false; } }});
   };
   const tin = el("input",{type:"text",id:"shadow-input",placeholder:"Đọc bằng micro bàn phím hoặc gõ lại câu",autocomplete:"off"});
   const typeForm = el("form",{class:"type-row",onsubmit:e=>{e.preventDefault(); if (tin.value.trim()) grade(tin.value.trim());}}, tin, el("button",{class:"btn",type:"submit"},"Chấm"));
