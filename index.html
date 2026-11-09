@@ -656,6 +656,7 @@ function engineInUse(){
   return "offline";
 }
 const AI_SERVER = ""; // trạm chung (chưa dùng): app gọi thẳng Gemini bằng mã của từng người
+const APP_VERSION = "10/11/2026 (bản 9)";
 const ENGINE_NAME = {claude:"AI Claude", gemini:"AI Gemini", server:"AI chung của app", offline:"Kịch bản có sẵn"};
 const LEVELS = {1:"beginner (A2): very simple words, short sentences", 2:"intermediate (B1-B2): everyday natural English", 3:"advanced (C1): natural idioms and richer vocabulary"};
 function rules(c){
@@ -777,11 +778,27 @@ async function askGemini(c, hist, signal){
   return cleanResult(parseLoose(txt));
 }
 const ACKS = [["Nice!","Hay đó!"],["Oh, I see.","À, mình hiểu rồi."],["Cool!","Tuyệt!"],["Got it.","Hiểu rồi."],["Interesting!","Thú vị ghê!"],["Love that.","Thích quá."]];
+const OPEN_QS = [
+ ["Tell me more about that. What happened next?","Kể thêm đi. Sau đó thế nào?","After that, I went home and relaxed."],
+ ["How did that make you feel?","Lúc đó bạn thấy thế nào?","I felt really happy and a bit tired."],
+ ["Why do you like it so much?","Sao bạn thích nó vậy?","Because it helps me relax."],
+ ["Who do you usually do that with?","Bạn thường làm vậy với ai?","Usually with my close friends."],
+ ["What's something you're looking forward to this month?","Tháng này bạn mong chờ điều gì?","I'm looking forward to a trip with my family."],
+ ["If you had a free day tomorrow, what would you do?","Nếu mai được nghỉ cả ngày, bạn sẽ làm gì?","I would sleep late and go to a nice cafe."],
+ ["What's one thing you learned recently?","Gần đây bạn học được điều gì?","I learned how to make a simple video."],
+ ["Is there anything you'd like to ask me?","Bạn có muốn hỏi mình gì không?","Yes, what do you do in your free time?"]
+];
 function offlineReply(c, hist){
   const n = hist.filter(m=>m.role==="ai").length - 1;
-  const q = c.qs[((n % c.qs.length) + c.qs.length) % c.qs.length];
   const ack = ACKS[hash(c.id + n) % ACKS.length];
   const meCount = hist.filter(m=>m.role==="me").length;
+  let q;
+  if (n < c.qs.length) q = c.qs[Math.max(0, n)];
+  else {
+    const k = n - c.qs.length;
+    if (k === 0) toast("Đã hết câu hỏi soạn sẵn của " + c.name + ". Dán mã Gemini trong Cài đặt để trò chuyện tự do, không lặp.", 5000);
+    q = OPEN_QS[k % OPEN_QS.length];
+  }
   return {reply: ack[0] + " " + q[0], vi: ack[1] + " " + q[1], review:null, hint:q[2], done: meCount >= c.qs.length};
 }
 async function askAI(c, hist, signal){
@@ -1210,7 +1227,7 @@ function openSettings(){
   };
   const ov = el("div",{class:"overlay",onclick:e=>{ if (e.target===ov) close(); }},
     el("div",{class:"sheet",role:"dialog","aria-modal":"true","aria-label":"Cài đặt"},
-      el("h2",{},"Cài đặt"),
+      el("h2",{},"Cài đặt"), el("p",{class:"help"},"Phiên bản " + APP_VERSION),
       el("div",{class:"row"}, el("label",{class:"lbl",for:"set-name"},"Tên của bạn"), nameI),
       el("div",{class:"row"}, el("span",{class:"lbl"},"Trình độ"), lvSeg),
       el("div",{class:"row"}, el("span",{class:"lbl"},"Bộ não AI của nhân vật"), engSeg,
