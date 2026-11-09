@@ -155,6 +155,8 @@ h1,h2,h3{font-family:var(--f-display);line-height:1.15;margin:0;text-wrap:balanc
 .rv-word{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .rv-word b{font-size:15px}
 .rv-praise{margin:0;color:var(--teal);font-weight:600}
+.ai-banner{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#FFF6DA;border:1px solid #F3D27A;border-radius:16px;padding:10px 12px;font-size:13.5px}
+.ai-banner p{margin:2px 0 0;color:var(--muted)}
 .typing{display:inline-flex;gap:4px;padding:14px 16px}
 .typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:dot 1s infinite}
 .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
@@ -570,8 +572,10 @@ function candidates(acc, g){
     const L=vLang(v); let s=0;
     if (L===want) s+=100; else if (L.startsWith("en")) s+=10; else s-=999;
     const vg=vGender(v); s += vg===g ? 30 : vg==="?" ? 8 : -25;
-    if (/natural|online|neural|premium|enhanced|google/i.test(v.name)) s+=15;
-    if (v.localService===false) s+=2;
+    if (/natural|neural|premium|enhanced|online|network|wavenet|studio/i.test(v.name + " " + v.voiceURI)) s+=22;
+    else if (/google/i.test(v.name)) s+=12;
+    if (/compact|espeak|local/i.test(v.name + " " + v.voiceURI)) s-=10;
+    if (v.localService===false) s+=8;
     return {v,s,exact:L===want};
   }).filter(x=>x.s>-500).sort((a,b)=>b.s-a.s);
 }
@@ -599,7 +603,9 @@ function speak(text, c, opts={}){
   const u = new SpeechSynthesisUtterance(text);
   const {voice} = voiceFor(c);
   if (voice){ u.voice = voice; u.lang = voice.lang; } else u.lang = ACCENTS[c.acc].lang;
-  u.rate = opts.rate || settings.rate; u.pitch = c.pitch;
+  u.rate = opts.rate || settings.rate;
+  // giữ cao độ gốc cho giọng thật nghe tự nhiên; chỉ chỉnh khi máy thiếu giọng đúng
+  u.pitch = voiceFor(c).exact ? 1 : c.pitch;
   u.onstart = () => setTalking(true);
   u.onend = u.onerror = () => { clearTimeout(speakSafety); setTalking(false); };
   clearTimeout(speakSafety);
@@ -646,9 +652,11 @@ function engineInUse(){
   if (settings.engine === "claude") return sampleFn ? "claude" : "offline";
   if (sampleFn) return "claude";
   if (settings.geminiKey) return "gemini";
+  if (AI_SERVER && !IN_CLAUDE) return "server";
   return "offline";
 }
-const ENGINE_NAME = {claude:"AI Claude", gemini:"AI Gemini", offline:"Kịch bản có sẵn"};
+const AI_SERVER = ""; // trạm chung (chưa dùng): app gọi thẳng Gemini bằng mã của từng người
+const ENGINE_NAME = {claude:"AI Claude", gemini:"AI Gemini", server:"AI chung của app", offline:"Kịch bản có sẵn"};
 const LEVELS = {1:"beginner (A2): very simple words, short sentences", 2:"intermediate (B1-B2): everyday natural English", 3:"advanced (C1): natural idioms and richer vocabulary"};
 function rules(c){
   const A = ACCENTS[c.acc];
@@ -731,12 +739,38 @@ async function askClaude(c, hist, signal){
   const j = await sampleFn.json(turns, {modelTier:"quick", cache:false, signal});
   return cleanResult(j);
 }
+function geminiContents(hist){ return [{role:"user", parts:[{text:"(start)"}]}, ...turnsOf(hist).map(t=>({role:t.role==="assistant"?"model":"user", parts:[{text:t.content}]}))]; }
+async function askServer(c, hist, signal){
+  const res = await fetch(AI_SERVER, {method:"POST", signal, headers:{"Content-Type":"application/json"}, body: JSON.stringify({system: rules(c), contents: geminiContents(hist)})});
+  if (!res.ok){ const err = new Error("server " + res.status); err.status = res.status; err.server = true; throw err; }
+  const data = await res.json();
+  const txt = data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("") || "";
+  return cleanResult(parseLoose(txt));
+}
 async function askGemini(c, hist, signal){
-  const contents = [{role:"user", parts:[{text:"(start)"}]}, ...turnsOf(hist).map(t=>({role:t.role==="assistant"?"model":"user", parts:[{text:t.content}]}))];
-  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
-    method:"POST", signal, headers:{"Content-Type":"application/json","x-goog-api-key":settings.geminiKey},
-    body: JSON.stringify({systemInstruction:{parts:[{text:rules(c)}]}, contents, generationConfig:{responseMimeType:"application/json", temperature:0.7, thinkingConfig:{thinkingBudget:512}}})
-  });
+  const contents = geminiContents(hist);
+  let res = null;
+  const models = settings.gModel ? [settings.gModel] : ["gemini-flash-lite-latest","gemini-flash-latest"];
+  outer: for (const model of models){
+    // "minimal" = AI nghĩ ít, trả lời nhanh; model không hỗ trợ thì gửi lại không kèm
+    for (const think of (settings.gThink === "off" ? [null] : ["minimal", null])){
+      const generationConfig = {responseMimeType:"application/json", temperature:0.7};
+      if (think) generationConfig.thinkingConfig = {thinkingLevel: think};
+      const sig = (AbortSignal.any && AbortSignal.timeout) ? AbortSignal.any([signal, AbortSignal.timeout(30000)]) : signal;
+      try{
+        res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+          method:"POST", signal:sig, headers:{"Content-Type":"application/json","x-goog-api-key":settings.geminiKey},
+          body: JSON.stringify({systemInstruction:{parts:[{text:rules(c)}]}, contents, generationConfig})
+        });
+      }catch(e){ if (signal.aborted) throw e; res = null; continue outer; }
+      if (res.ok){ if (!settings.gModel || settings.gThink !== (think ? "minimal" : "off")){ settings.gModel = model; settings.gThink = think ? "minimal" : "off"; saveS(); } break outer; }
+      if (res.status === 400 && think) continue;
+      if ([404,429,500,503].includes(res.status)) continue outer;
+      break outer;
+    }
+  }
+  if (!res){ const err = new Error("gemini timeout"); err.status = 504; throw err; }
+  if (!res.ok && settings.gModel){ settings.gModel = ""; settings.gThink = ""; saveS(); }
   if (!res.ok){ const err = new Error("gemini " + res.status); err.status = res.status; throw err; }
   const data = await res.json();
   const txt = data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("") || "";
@@ -754,13 +788,14 @@ async function askAI(c, hist, signal){
   const eng = engineInUse();
   if (eng === "offline") return {...offlineReply(c, hist), engine:"offline"};
   try{
-    const r = eng === "claude" ? await askClaude(c, hist, signal) : await askGemini(c, hist, signal);
+    const r = eng === "claude" ? await askClaude(c, hist, signal) : eng === "server" ? await askServer(c, hist, signal) : await askGemini(c, hist, signal);
     return {...r, engine:eng};
   }catch(e){
     if (e && (e.code === "cancelled" || e.name === "AbortError")) throw e;
     let why = "AI đang bận";
     if (e && e.code === "not_granted") why = "Bạn chưa cho phép dùng AI Claude";
     else if (e && e.code === "rate_limited") why = "AI Claude đang giới hạn lượt, nghỉ chút rồi thử lại";
+    else if (e && e.server) why = e.status === 429 ? "AI chung đang hết lượt (mỗi người tối đa 80 câu/giờ), nghỉ chút rồi thử lại" : "AI chung đang trục trặc";
     else if (e && (e.status === 400 || e.status === 403)) why = "Mã Gemini chưa đúng, kiểm tra lại trong Cài đặt";
     else if (e && e.status === 429) why = "Gemini hết lượt miễn phí tạm thời";
     toast(why + ". Tạm dùng câu hỏi có sẵn.", 3600);
@@ -905,7 +940,7 @@ function renderChat(){
   v.append(el("div",{class:"chat-top wrap",style:"max-width:none"},
     el("button",{class:"icon-btn","aria-label":"Quay lại",html:ICON.back,onclick:closeChat}),
     el("div",{class:"who"}, el("b",{},c.name), el("span",{}, `Giọng ${ACCENTS[c.acc].label}${exact?"":" (máy chưa có, đang dùng giọng thay thế)"} · ${c.topic} · `, el("span",{id:"engine-note"}, ENGINE_NAME[engineInUse()]))),
-    el("button",{class:"icon-btn","aria-label":"Đổi sang tình huống mới",title:"Tình huống mới",html:ICON.reset,onclick:restartChat}),
+    el("button",{class:"btn ghost sm","aria-label":"Làm mới cuộc trò chuyện",title:"Xoá cuộc trò chuyện này và bắt đầu lại",html:ICON.reset+"<span>Làm mới</span>",onclick:restartChat}),
     el("button",{class:"icon-btn","aria-label":"Cài đặt",html:ICON.gear,onclick:openSettings})
   ));
   const room = el("div",{class:"room"});
@@ -930,6 +965,11 @@ function renderChat(){
   controls.append(el("div",{id:"typebox"}));
   col.append(controls);
   room.append(stage, col); v.append(room);
+  if (engineInUse() === "offline" && !IN_CLAUDE){
+    log.append(el("div",{class:"ai-banner"},
+      el("div",{}, el("b",{},"Nhân vật chưa có AI"), el("p",{},"Hiện nhân vật chỉ hỏi theo câu có sẵn và không sửa lỗi kỹ. Dán mã Gemini miễn phí (1 lần trên máy này) để trò chuyện tự nhiên.")),
+      el("button",{class:"btn sm",onclick:openSettings},"Dán mã Gemini")));
+  }
   state.hist.forEach((m,i)=>log.append(renderMsg(m,i)));
   renderTypeRow(false);
   scrollLog();
@@ -1175,7 +1215,7 @@ function openSettings(){
       el("div",{class:"row"}, el("span",{class:"lbl"},"Trình độ"), lvSeg),
       el("div",{class:"row"}, el("span",{class:"lbl"},"Bộ não AI của nhân vật"), engSeg,
         el("p",{class:"help"}, "Đang dùng: ", el("b",{}, ENGINE_NAME[engineInUse()]), ". Mở trong Claude thì AI Claude chạy sẵn, không cần mã. Mở bằng đường link riêng thì dán mã Gemini miễn phí (lấy tại aistudio.google.com/apikey).")),
-      el("div",{class:"row"}, el("label",{class:"lbl",for:"set-key"},"Mã API Gemini"), keyI, el("p",{class:"help"},"Mã chỉ lưu trên máy này, không gửi đi đâu ngoài Google.")),
+      el("div",{class:"row"}, el("label",{class:"lbl",for:"set-key"},"Mã API Gemini"), keyI, el("p",{class:"help"},"Lấy mã miễn phí tại ", el("a",{href:"https://aistudio.google.com/apikey",target:"_blank",rel:"noopener"},"aistudio.google.com/apikey"), " (đăng nhập Gmail, bấm Create API key, bấm Copy). Mã chỉ lưu trên máy này, chỉ gửi tới Google.")),
       el("div",{class:"row"}, el("label",{class:"lbl",for:"set-rate"},"Tốc độ nói của nhân vật ", rateOut), rateI),
       el("div",{class:"row"}, el("label",{class:"lbl",for:"set-rec"},"Nhận diện giọng của bạn theo"), recSel),
       el("label",{style:"display:flex;gap:10px;align-items:center;font-weight:600"}, viI, "Luôn hiện bản dịch tiếng Việt"),
