@@ -110,6 +110,7 @@ h1,h2,h3{font-family:var(--f-display);line-height:1.15;margin:0;text-wrap:balanc
 .stage-info{display:flex;flex-direction:column;gap:8px;min-width:0}
 .mission-box{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:8px 10px;font-size:13px;line-height:1.35}
 @media(min-width:900px){.mission-box{background:var(--surface-2)}}
+.mission-box .scn{margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}
 .mission-box b{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
 .mission-box.done{border-style:solid;border-color:var(--good);background:var(--good-soft)}
 .mission-box.done b{color:var(--good)}
@@ -396,7 +397,65 @@ const CAST = [
   look:{skin:"#C69071", hair:"#2E2420", style:"short", shirt:"#1D3557", bg:"#D7DFEA", extras:["glasses"]}}
 ];
 const CATS = [["all","Tất cả chủ đề"],["biz","Kinh doanh & công việc"],["air","Sân bay & máy bay"],["crew","Tiếp viên hàng không"],["life","Đời sống"]];
+/* Daily scenarios: [situation for AI, Vietnamese summary, greeting, greeting in Vietnamese]. Index 0 of each list is the base greeting. */
+const TWISTS = {
+ emma:[["The café is very busy and you are out of oat milk; suggest alternatives.","Quán đông, hết sữa yến mạch, Emma gợi ý món thay thế.","Hi! Sorry for the wait, it's crazy busy today. Just so you know, we're out of oat milk. What can I get you?","Chào! Xin lỗi để bạn chờ, hôm nay đông quá. Báo trước là hết sữa yến mạch rồi. Bạn dùng gì nhé?"],
+  ["You just served the learner the wrong drink; they must point it out politely and get it fixed.","Emma làm nhầm món, bạn phải lịch sự báo lại.","Here you go, one hot caramel latte! Oh wait, you look surprised. Is everything okay with your drink?","Của bạn đây, một caramel latte nóng! Ủa, trông bạn ngạc nhiên. Đồ uống có ổn không?"],
+  ["It's a quiet rainy afternoon; chat about the learner's day and recommend the new seasonal drink.","Chiều mưa vắng khách, Emma rủ trò chuyện và giới thiệu món mới.","Hey, come on in out of the rain! It's so quiet today. Want to try our new pumpkin spice latte?","Vào đi, trú mưa nè! Hôm nay vắng ghê. Thử món latte bí đỏ mới không?"]],
+ jake:[["The learner's checked bag is 3 kg over the limit.","Hành lý ký gửi bị quá 3 ký.","Hi there! Let's put your bag on the scale. Hmm, it's twenty-six kilos and the limit is twenty-three. What would you like to do?","Chào! Cân hành lý nhé. Hmm, 26 ký mà giới hạn là 23. Bạn muốn xử lý sao?"],
+  ["The flight is delayed by three hours; the learner asks about options and meal vouchers.","Chuyến bay trễ 3 tiếng, bạn hỏi phương án và phiếu ăn.","Hi, I'm afraid I have some bad news. Your flight is delayed by about three hours. How can I help you?","Chào, mình có tin không vui. Chuyến bay của bạn trễ khoảng 3 tiếng. Mình giúp gì được?"],
+  ["The learner arrives late; check-in closes in five minutes.","Bạn đến muộn, 5 phút nữa đóng quầy.","Whoa, you made it just in time! Check-in closes in five minutes. Where are you flying today?","Ôi, bạn đến vừa kịp! 5 phút nữa đóng quầy. Hôm nay bạn bay đi đâu?"]],
+ noah:[["As the customer, you received the wrong colour and want an exchange.","Khách nhận sai màu, muốn đổi hàng.","Hi, it's Noah again, playing the customer. I ordered a blue bag but got a pink one. This is really annoying. What can you do?","Chào, lại là Noah đóng vai khách. Tôi đặt túi xanh mà nhận túi hồng. Bực quá. Bạn xử lý sao?"],
+  ["As the customer, you want a refund for a product you already used.","Khách đòi hoàn tiền dù đã dùng sản phẩm.","Hello. I bought a face cream last week, used it a few times, and I don't like it. I want my money back. Can you do that?","Chào. Tuần rồi tôi mua kem dưỡng, dùng vài lần rồi, không thích. Tôi muốn hoàn tiền. Được không?"],
+  ["As the customer, you left a one-star review because your parcel was lost; the learner calls to fix it.","Khách đánh giá 1 sao vì mất hàng, bạn gọi điện xử lý.","Hello? Oh, you're calling about my one-star review? Yes, my parcel never arrived! Why should I trust your shop now?","Alô? À bạn gọi về đánh giá 1 sao à? Đúng, hàng của tôi không tới! Sao tôi phải tin shop nữa?"]],
+ olivia:[["Interview for a marketing manager role; focus on a campaign the learner ran.","Phỏng vấn trưởng phòng marketing, kể 1 chiến dịch.","Hello, thanks for coming in. This is for the marketing manager role. Could you start by telling me about a campaign you're proud of?","Chào, cảm ơn bạn đã đến. Đây là vị trí trưởng phòng marketing. Bạn kể về một chiến dịch bạn tự hào nhé?"],
+  ["A tough interview: ask about weaknesses and a failure.","Phỏng vấn khó: hỏi điểm yếu và một lần thất bại.","Good afternoon. I'll be quite direct today. What would you say is your biggest weakness?","Chào buổi chiều. Hôm nay mình hỏi thẳng nhé. Điểm yếu lớn nhất của bạn là gì?"],
+  ["The learner passed; now negotiate salary and start date.","Đã đậu phỏng vấn, thương lượng lương và ngày đi làm.","Great news, we'd like to offer you the job! Before we finalise, what salary are you expecting?","Tin vui, chúng tôi muốn nhận bạn! Trước khi chốt, bạn mong muốn mức lương bao nhiêu?"]],
+ harry:[["The learner is vegetarian; suggest dishes.","Bạn ăn chay, Harry gợi ý món.","Evening, welcome in! I hear you might be vegetarian? Don't worry, I've got some lovely options. What do you fancy?","Chào buổi tối! Nghe nói bạn ăn chay? Đừng lo, có vài món ngon. Bạn thích gì?"],
+  ["The learner's food arrived cold; they must complain politely.","Món ăn bị nguội, bạn phàn nàn lịch sự.","Hello again! How's everything tasting tonight?","Chào lần nữa! Tối nay món ăn thế nào?"],
+  ["Teach the learner to cook a simple British dish and ask about Vietnamese recipes.","Harry dạy nấu món Anh và hỏi công thức món Việt.","Right then, welcome to my kitchen! Today we're making a simple shepherd's pie. Have you ever cooked British food?","Nào, chào mừng tới bếp! Hôm nay làm bánh khoai tây nhân thịt. Bạn từng nấu món Anh chưa?"]],
+ sophie:[["The learner is buying a gift for a friend and needs advice on size and colour.","Mua quà cho bạn, cần tư vấn size và màu.","Hiya! Are you shopping for yourself or for someone special today?","Chào! Hôm nay bạn mua cho mình hay cho ai đặc biệt?"],
+  ["The item the learner wants is sold out in their size; they ask to order it or find something similar.","Hết size, bạn hỏi đặt trước hoặc tìm món tương tự.","Hi there! Oh, you're after that green dress? I'm so sorry, we've just sold the last one in your size.","Chào! À bạn tìm chiếc váy xanh đó à? Tiếc quá, size của bạn vừa bán hết."],
+  ["The learner was charged twice at the till and needs it fixed.","Bị tính tiền hai lần, cần xử lý.","Hiya, welcome back! Is everything alright? You look a bit worried.","Chào, bạn quay lại à! Mọi thứ ổn không? Trông bạn hơi lo."]],
+ chloe:[["Plan a beach day together: transport, food and time.","Lên kế hoạch đi biển: phương tiện, đồ ăn, giờ giấc.","G'day! The weather's gorgeous this weekend. Wanna plan a beach day together? What do we need to sort out?","Chào! Cuối tuần trời đẹp lắm. Lên kế hoạch đi biển cùng không? Cần chuẩn bị gì nhỉ?"],
+  ["Talk about favourite movies and music and recommend one each.","Nói về phim, nhạc yêu thích và gợi ý cho nhau.","Hey! I watched the best movie last night. Are you more into movies or music?","Chào! Tối qua mình xem một phim hay cực. Bạn thích phim hay nhạc hơn?"],
+  ["The picnic is cancelled because of rain; make a new indoor plan.","Picnic bị huỷ vì mưa, lên kế hoạch trong nhà.","Ugh, it's bucketing down! Our picnic is off. What can we do indoors instead?","Mưa như trút! Picnic huỷ rồi. Thay vào đó mình làm gì trong nhà nhỉ?"]],
+ liam:[["The learner looks tired; talk about sleep habits and set a sleep goal.","Bạn trông mệt, nói về giấc ngủ và đặt mục tiêu ngủ.","Hey mate! You look a bit tired today. How have you been sleeping lately?","Chào! Hôm nay bạn trông hơi mệt. Dạo này ngủ thế nào?"],
+  ["Plan a healthy meal plan for the week together.","Cùng lên thực đơn lành mạnh cho tuần.","G'day! Let's sort out your meals for the week. What did you eat yesterday?","Chào! Mình lên thực đơn cho tuần nhé. Hôm qua bạn ăn gì?"],
+  ["The learner has back pain from sitting all day; suggest stretches and a routine.","Đau lưng vì ngồi nhiều, Liam gợi ý giãn cơ.","Hey! You're holding your back, mate. Too much sitting at the desk?","Chào! Bạn đang ôm lưng kìa. Ngồi bàn nhiều quá hả?"]],
+ priya:[["You want a partner to sell your products in Vietnam; ask what Vietnamese customers like.","Priya tìm đối tác bán hàng tại Việt Nam.","Hello! I'm looking for a partner to sell my products in Vietnam. What do you think Vietnamese customers would like?","Xin chào! Mình đang tìm đối tác bán hàng ở Việt Nam. Bạn nghĩ khách Việt sẽ thích gì?"],
+  ["You got bad reviews this week; discuss how to handle bad reviews and returns.","Bàn cách xử lý đánh giá xấu và hàng hoàn.","Hi! I got two bad reviews this week and my sales dropped. How do you deal with bad reviews?","Chào! Tuần này mình bị 2 đánh giá xấu, doanh số giảm hẳn. Bạn xử lý đánh giá xấu thế nào?"],
+  ["Plan a livestream sale together: product, offer and opening lines.","Lên kế hoạch livestream: sản phẩm, ưu đãi, câu mở đầu.","Hello! I want to try livestream selling next week. Can you help me plan it? Which product should we start with?","Xin chào! Tuần sau mình muốn thử livestream. Bạn giúp lên kế hoạch nhé? Nên bắt đầu với sản phẩm nào?"]],
+ arjun:[["Practise a scholarship interview; you are the panel.","Luyện phỏng vấn học bổng.","Hi! Let's practise a scholarship interview. I'll be the panel. Why do you deserve this scholarship?","Chào! Luyện phỏng vấn học bổng nhé. Mình làm hội đồng. Vì sao bạn xứng đáng nhận học bổng này?"],
+  ["Share tips on balancing study, work and life.","Chia sẻ cách cân bằng học, làm và cuộc sống.","Hey! Honestly, I'm exhausted this week with assignments. How do you plan to balance study and work?","Chào! Tuần này mình mệt vì bài tập quá. Bạn định cân bằng học và làm thế nào?"],
+  ["Talk about choosing a thesis topic.","Bàn chuyện chọn đề tài luận văn.","Hi! I'm choosing my thesis topic right now. If you wrote a thesis, what topic would you choose?","Chào! Mình đang chọn đề tài luận văn. Nếu bạn viết luận văn, bạn chọn đề tài gì?"]],
+ daniel:[["The last shipment was two weeks late; you want a late-delivery penalty clause in the renewal.","Lô trước giao trễ, Daniel đòi điều khoản phạt.","Good morning. I'll be honest, the last shipment was two weeks late. Before we renew, I want a late-delivery penalty in the contract. Your thoughts?","Chào buổi sáng. Nói thật, lô trước trễ 2 tuần. Trước khi gia hạn, tôi muốn thêm điều khoản phạt giao trễ. Bạn nghĩ sao?"],
+  ["You will only sign if you get exclusive distribution rights in the UK.","Daniel đòi độc quyền phân phối tại Anh.","Afternoon. We like your products a lot, but we'd only sign if we're your exclusive distributor in the UK. Can you agree to that?","Chào buổi chiều. Chúng tôi rất thích sản phẩm của bạn, nhưng chỉ ký nếu được độc quyền ở Anh. Bạn đồng ý không?"],
+  ["The price is agreed, but you want a two-year warranty instead of one.","Giá đã chốt, Daniel đòi bảo hành 2 năm.","Hello again. The price works for us now, but we need a two-year warranty instead of one. Is that possible?","Chào lại. Giá ổn rồi, nhưng chúng tôi cần bảo hành 2 năm thay vì 1. Được không?"]],
+ sarah:[["Sales dropped this month; the learner explains why and proposes a fix.","Doanh số giảm, giải thích và đề xuất cách sửa.","Morning, team. Okay, the numbers are down this month. Can you walk us through what happened on your side?","Chào cả nhóm. Số liệu tháng này giảm. Bạn trình bày xem bên bạn đã xảy ra chuyện gì?"],
+  ["Brainstorm a launch plan for a new product.","Lên ý tưởng ra mắt sản phẩm mới.","Hi everyone! We're launching a new product next quarter. Let's brainstorm. What's your first idea for the launch?","Chào mọi người! Quý sau ra mắt sản phẩm mới. Cùng lên ý tưởng nhé. Ý tưởng đầu tiên của bạn là gì?"],
+  ["You plan to cut the ad budget by half; the learner should disagree politely with reasons.","Phản đối lịch sự kế hoạch cắt ngân sách quảng cáo.","Morning. I'm thinking we should cut the ad budget in half next month. What do you think?","Chào buổi sáng. Mình đang tính cắt một nửa ngân sách quảng cáo tháng tới. Bạn nghĩ sao?"]],
+ rohan:[["The samples had quality problems; the learner asks you to fix them.","Hàng mẫu lỗi chất lượng, yêu cầu khắc phục.","Hello! Did you receive the samples? What did you think of the quality?","Xin chào! Bạn nhận được hàng mẫu chưa? Chất lượng thế nào?"],
+  ["Negotiate shipping terms and who pays for freight.","Thương lượng vận chuyển và ai trả cước.","Hello again! The order is almost ready. About shipping, do you want us to handle it, or will you use your own forwarder?","Chào lại! Đơn gần xong. Về vận chuyển, bạn muốn bên tôi lo hay dùng đơn vị riêng?"],
+  ["Raw material costs went up; you want to raise prices by eight percent.","Giá nguyên liệu tăng, Rohan muốn tăng giá 8%.","Hello, my friend. I have some difficult news. Our material costs went up, so we need to raise prices by eight percent.","Chào bạn. Tôi có tin khó nói. Giá nguyên liệu tăng nên bên tôi phải tăng giá 8%."]],
+ grace:[["The learner arrives on a student visa; ask about the university and accommodation.","Bạn sang du học, Grace hỏi về trường và chỗ ở.","Good afternoon, welcome to Australia. I see a student visa here. Which university will you be studying at?","Chào buổi chiều, chào mừng tới Úc. Tôi thấy visa du học. Bạn học trường nào?"],
+  ["The learner's bag is selected for a customs check because of food.","Hành lý bị kiểm tra hải quan vì mang đồ ăn.","Hello. Your bag has been selected for inspection. Is there any food in here?","Chào. Hành lý của bạn được chọn để kiểm tra. Trong này có đồ ăn không?"],
+  ["You work at the baggage desk today; the learner's luggage is lost.","Thất lạc hành lý, báo tại quầy.","Hi, this is the baggage services desk. You look worried. Has something happened to your luggage?","Chào, đây là quầy hành lý. Trông bạn lo lắng. Hành lý của bạn có chuyện gì à?"]],
+ ella:[["There is turbulence and the learner feels nervous.","Máy bay rung lắc, bạn lo và hỏi tiếp viên.","Hello, I'm Ella from the cabin crew. We're having a bit of turbulence. Are you feeling alright?","Chào, mình là Ella. Máy bay đang hơi rung lắc. Bạn thấy ổn không?"],
+  ["The learner feels unwell on the flight and pressed the call button.","Bạn thấy mệt trên máy bay và bấm nút gọi.","Hello there, you pressed the call button. How can I help you?","Chào, bạn vừa bấm nút gọi. Mình giúp gì được?"],
+  ["Duty-free shopping: the learner asks about products, prices and currency.","Mua hàng miễn thuế, hỏi giá và loại tiền.","Good afternoon! We're starting our duty-free service now. Would you like to see anything today?","Chào buổi chiều! Bắt đầu bán hàng miễn thuế. Bạn muốn xem món gì không?"]],
+ jack:[["Group assessment task: a delayed flight with angry passengers.","Thi nhóm: chuyến bay trễ, khách đang giận.","G'day! This is the group task. Imagine a flight is delayed and passengers are angry. What would you do first?","Chào! Đây là phần thi nhóm. Chuyến bay trễ và khách đang giận. Bạn làm gì đầu tiên?"],
+  ["Role-play: a passenger has a medical problem on board.","Đóng vai: khách bị mệt cần cấp cứu trên máy bay.","Okay, role-play time. A passenger in row twenty suddenly feels very unwell. What do you do?","Nào, đóng vai nhé. Khách hàng 20 đột nhiên rất mệt. Bạn làm gì?"],
+  ["Final round: questions about living abroad and night shifts.","Vòng cuối: hỏi về sống xa nhà và làm ca đêm.","Welcome to the final round! This job means living abroad and working nights. How do you feel about that?","Chào mừng vòng cuối! Công việc phải sống ở nước ngoài và làm đêm. Bạn thấy thế nào?"]],
+ ananya:[["As the passenger, you insist on keeping an oversized bag in the cabin.","Khách đòi mang túi quá khổ lên khoang.","Excuse me, flight attendant? My bag doesn't fit in the overhead locker, but I'm not checking it in. My laptop is inside.","Xin lỗi, tiếp viên ơi? Túi tôi không vừa ngăn hành lý, nhưng tôi không ký gửi đâu. Có laptop trong đó."],
+  ["As the passenger, you don't want to put your seat up for landing.","Khách không chịu dựng ghế khi hạ cánh.","Hmm? You want me to put my seat up? But I'm sleeping, and we're not landing yet, are we?","Hả? Bạn muốn tôi dựng ghế à? Tôi đang ngủ mà, đã hạ cánh đâu?"],
+  ["As the passenger, you are afraid of flying and need calming down.","Khách sợ bay, cần được trấn an.","Excuse me, sorry, I'm really scared of flying. Is that noise normal?","Xin lỗi, tôi sợ đi máy bay lắm. Tiếng động đó có bình thường không?"]],
+ ben:[["Drill: a forty-minute ground delay announcement, then passengers' questions.","Luyện thông báo chờ 40 phút và trả lời câu hỏi.","Morning, trainee! Today's drill: we're delayed forty minutes on the ground. Give me the announcement.","Chào học viên! Bài hôm nay: chuyến bay chờ dưới đất 40 phút. Đọc thông báo đi."],
+  ["Drill: the turbulence announcement and seatbelt instructions.","Luyện thông báo rung lắc và dây an toàn.","Alright, we're expecting turbulence in five minutes. Let's hear your turbulence announcement.","Rồi, 5 phút nữa có rung lắc. Đọc thông báo rung lắc nhé."],
+  ["Drill: the arrival announcement with local time, weather and connections.","Luyện thông báo đến nơi: giờ, thời tiết, chuyến nối.","Great work this week! Final drill: we've just landed in Singapore. Give me the arrival announcement.","Tuần này giỏi lắm! Bài cuối: vừa hạ cánh Singapore. Đọc thông báo đến nơi đi."]]
+};
 const byId = id => CAST.find(c => c.id === id);
+function scenarioList(c){ return [[null,null,c.greet,c.greetVi], ...(TWISTS[c.id]||[])]; }
 
 /* ================= Storage (safe) ================= */
 const store = {
@@ -596,7 +655,7 @@ function rules(c){
   return `SPEAKING PRACTICE ROLE-PLAY.
 You are ${c.name}, ${c.age}, ${c.bio} You speak ${A.en} English (use ${A.spelling} spelling and a few natural ${A.en} expressions).
 You chat like a warm, curious friend with ${profile.name}, a Vietnamese learner of English, level ${LEVELS[profile.level]}.
-Topic: ${c.topicEn}. The learner's mission: ${c.missionEn}.
+Topic: ${c.topicEn}. The learner's mission: ${c.missionEn}.${state.scn && state.scn[0] ? "\nToday's situation (stay consistent with it, it may change the mission details): " + state.scn[0] : ""}
 How to talk: 1-3 short spoken sentences (under 40 words), casual and friendly. React to what they said, share a little about yourself, and end with ONE question that moves the mission forward. No emojis, lists or stage directions. Never say you are an AI unless asked.
 The learner's words come from speech recognition: ignore punctuation, capitalization and obvious mis-hearings. If they use Vietnamese or seem stuck, help in very simple English and give them a phrase to use.
 You are ALSO the learner's speaking coach: review the learner's LAST message.
@@ -778,7 +837,14 @@ function openChat(id){
   const c = byId(id); if (!c) return;
   state.c = c; state.hist = store.get(histKey(id), []);
   state.typing = micBlocked;
-  if (!state.hist.length) state.hist.push({role:"ai", text:c.greet, vi:c.greetVi, hint:c.phrases[0][0]});
+  const list = scenarioList(c), ai = engineInUse() !== "offline";
+  let rec0 = store.get("scn_" + id, null);
+  if (!rec0 || rec0.day !== dayKey() || (!ai && rec0.idx)){
+    rec0 = {day: dayKey(), idx: ai ? hash(dayKey() + id) % list.length : 0};
+    store.set("scn_" + id, rec0); state.hist = [];
+  }
+  state.scn = list[rec0.idx] || list[0];
+  if (!state.hist.length){ state.hist.push({role:"ai", text:state.scn[2], vi:state.scn[3], hint:c.phrases[0][0]}); saveHist(); }
   $("#home").hidden = true; document.body.classList.add("in-chat"); const v = $("#chat"); v.hidden = false;
   renderChat();
   const last = state.hist[state.hist.length-1];
@@ -797,7 +863,7 @@ function renderChat(){
   v.append(el("div",{class:"chat-top wrap",style:"max-width:none"},
     el("button",{class:"icon-btn","aria-label":"Quay lại",html:ICON.back,onclick:closeChat}),
     el("div",{class:"who"}, el("b",{},c.name), el("span",{}, `Giọng ${ACCENTS[c.acc].label}${exact?"":" (máy chưa có, đang dùng giọng thay thế)"} · ${c.topic} · `, el("span",{id:"engine-note"}, ENGINE_NAME[engineInUse()]))),
-    el("button",{class:"icon-btn","aria-label":"Bắt đầu lại cuộc trò chuyện",title:"Bắt đầu lại",html:ICON.reset,onclick:restartChat}),
+    el("button",{class:"icon-btn","aria-label":"Đổi sang tình huống mới",title:"Tình huống mới",html:ICON.reset,onclick:restartChat}),
     el("button",{class:"icon-btn","aria-label":"Cài đặt",html:ICON.gear,onclick:openSettings})
   ));
   const room = el("div",{class:"room"});
@@ -805,7 +871,7 @@ function renderChat(){
     el("div",{class:"puppet",id:"puppet"}, el("div",{class:"av",html:avatarSVG(c)})),
     el("div",{class:"stage-info"},
       el("span",{class:"status",id:"status"}, el("i"), el("span",{},"Sẵn sàng nghe bạn")),
-      el("div",{class:"mission-box"+(missionDone?" done":"")}, el("b",{}, missionDone ? "Đã hoàn thành nhiệm vụ" : "Nhiệm vụ"), c.mission),
+      el("div",{class:"mission-box"+(missionDone?" done":"")}, el("b",{}, missionDone ? "Đã hoàn thành nhiệm vụ" : "Nhiệm vụ"), c.mission, state.scn && state.scn[1] ? el("div",{class:"scn"}, el("b",{},"Tình huống hôm nay"), state.scn[1]) : null),
       el("div",{class:"phrases"}, el("h5",{},"Mẫu câu hay dùng (bấm để nghe)"),
         c.phrases.map(([en,vi]) => el("button",{class:"phrase",onclick:()=>speak(en,c)}, en, el("small",{},vi))))
     ));
@@ -890,8 +956,13 @@ function reviewCard(m){
 function appendMsg(m){ state.hist.push(m); $("#log")?.append(renderMsg(m, state.hist.length-1)); scrollLog(); }
 function restartChat(){
   stopSpeaking(); state.ctl?.abort(); state.busy=false;
-  state.hist = [{role:"ai", text:state.c.greet, vi:state.c.greetVi, hint:state.c.phrases[0][0]}];
-  saveHist(); renderChat(); speak(state.c.greet, state.c);
+  const c = state.c, list = scenarioList(c), ai = engineInUse() !== "offline";
+  const prev = store.get("scn_" + c.id, {idx:0});
+  const idx = ai ? (prev.idx + 1) % list.length : 0;
+  store.set("scn_" + c.id, {day: dayKey(), idx}); state.scn = list[idx];
+  state.hist = [{role:"ai", text:state.scn[2], vi:state.scn[3], hint:c.phrases[0][0]}];
+  saveHist(); renderChat(); speak(state.scn[2], c);
+  toast(ai ? "Tình huống mới: " + (state.scn[1] || "tình huống gốc") : "Đã bắt đầu lại. Bật AI để có tình huống mới mỗi lần.");
 }
 function showHint(){
   const last = [...state.hist].reverse().find(m=>m.role==="ai");
