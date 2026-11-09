@@ -658,13 +658,19 @@ You chat like a warm, curious friend with ${profile.name}, a Vietnamese learner 
 Topic: ${c.topicEn}. The learner's mission: ${c.missionEn}.${state.scn && state.scn[0] ? "\nToday's situation (stay consistent with it, it may change the mission details): " + state.scn[0] : ""}
 How to talk: 1-3 short spoken sentences (under 40 words), casual and friendly. React to what they said, share a little about yourself, and end with ONE question that moves the mission forward. No emojis, lists or stage directions. Never say you are an AI unless asked.
 The learner's words come from speech recognition: ignore punctuation, capitalization and obvious mis-hearings. If they use Vietnamese or seem stuck, help in very simple English and give them a phrase to use.
-You are ALSO the learner's speaking coach: review the learner's LAST message.
-Reply with ONLY one JSON object, nothing else:
-{"reply":"...","vi":"Vietnamese translation of reply","fixes":[],"better":null,"pron":[],"praise":"...","hint":"one short natural sentence the learner could say next","done":false}
-"fixes": up to 3 items {"wrong":"the learner's exact faulty phrase","right":"corrected phrase","why":"one short sentence in Vietnamese naming the rule"} for real mistakes in grammar, word order, sentence structure, tense, articles, plurals or word choice. Empty array if the sentence is correct.
-"better": a more natural, complete version of the learner's whole sentence as a native speaker would say it, or null if it is already natural.
-"pron": up to 2 items {"word":"English word","tip":"short pronunciation tip in Vietnamese"}. Only when the transcript suggests a likely mispronunciation (an odd or wrong word that sounds like what they probably meant, e.g. "ship" for "sheep", "think" for "sink") or a word Vietnamese speakers often mispronounce that appears in their message (final consonants, -s/-ed endings, th, r/l, v/w, word stress). Empty array otherwise.
-"praise": one short encouraging sentence in Vietnamese about what they did well.
+You are ALSO a strict, careful English coach (like an IELTS speaking examiner). FIRST review the learner's LAST message, THEN write your in-character reply.
+Review checklist, check every item: subject-verb agreement, singular/plural nouns (-s), articles (a/an/the), verb tense, missing or wrong "be", word order, prepositions, word choice, countable/uncountable, incomplete sentences. Numbers inside a sentence should be words ("two", not "2"). Do NOT invent errors when a sentence is correct, and ignore punctuation, capital letters and contractions.
+Speech recognition clue: if a word in the transcript does not fit the context (e.g. "strain" when talking about strengths, "ship" for "sheep"), the learner most likely mispronounced the intended word. Then put the intended word in "pron", and use the intended word in "fixes" and "better".
+Example. Question: "What are your two biggest strengths?" Learner transcript: "my 2 strain is problem solving and leading a team". Correct review:
+"fixes":[{"wrong":"my 2 strain is","right":"my two strengths are","why":"Danh từ số nhiều cần thêm -s và đi với 'are'; số trong câu nên viết bằng chữ."}],
+"better":"My two biggest strengths are problem-solving and leading a team.",
+"pron":[{"word":"strengths","tip":"Máy nghe thành 'strain'. Đọc rõ /streŋθs/: âm 'ng', âm 'th' (lưỡi giữa hai răng) và 's' cuối."}]
+Reply with ONLY one JSON object, nothing else, keys in this order:
+{"fixes":[],"better":null,"pron":[],"praise":"...","reply":"...","vi":"Vietnamese translation of reply","hint":"one short natural sentence the learner could say next","done":false}
+"fixes": up to 3 items {"wrong":"the learner's exact faulty words","right":"corrected words","why":"one short sentence in Vietnamese naming the rule"}. Empty array only if the sentence is truly correct.
+"better": a more natural, complete version of the learner's whole message as a native speaker would say it, or null if it is already natural.
+"pron": up to 2 items {"word":"English word","tip":"short pronunciation tip in Vietnamese"} for likely mispronounced words (see the clue above) or words Vietnamese speakers often mispronounce that appear in the message (final consonants, -s/-ed endings, th, r/l, v/w, word stress). Empty array otherwise.
+"praise": one short, honest encouraging sentence in Vietnamese.
 "done": true only when the learner has clearly completed the whole mission.`;
 }
 function turnsOf(hist){ return hist.filter(m=>m.role==="ai"||m.role==="me").slice(-16).map(m=>({role:m.role==="ai"?"assistant":"user", content:m.text})); }
@@ -684,6 +690,41 @@ function cleanResult(j){
   const better = typeof j.better === "string" && j.better.trim() ? j.better.trim() : null;
   return {reply:j.reply.trim(), vi:String(j.vi||""), review:{fixes, better, pron, praise:String(j.praise||"")}, hint:String(j.hint||""), done:j.done===true};
 }
+const LT_KEEP = new Set(["GRAMMAR","CONFUSED_WORDS","COLLOCATIONS","NONSTANDARD_PHRASES","SEMANTICS","MISC"]);
+function ltWhy(m){
+  const id = m.rule?.id || "", msg = (m.message || "") + " " + (m.shortMessage || "");
+  if (/^CD_NN|PLURAL|SINGULAR/i.test(id) || /plural|singular/i.test(msg)) return "Sai số ít/số nhiều: sau số lớn hơn 1, danh từ cần ở dạng số nhiều.";
+  if (/AGR|NON3PRS|3SG/i.test(id) || /agreement/i.test(msg)) return "Động từ chưa hợp với chủ ngữ (I/you/we/they go, he/she/it goes).";
+  if (/^(EN_A_VS_AN|A_)|ARTICLE|DT_/i.test(id) || /article|“a”|“an”|"a"|"an"/i.test(msg)) return "Dùng mạo từ a/an/the chưa đúng.";
+  if (/TENSE|PAST|VB[DN]/i.test(id) || /tense|past/i.test(msg)) return "Sai thì của động từ.";
+  if (/PREP|IN_ON_AT/i.test(id) || /preposition/i.test(msg)) return "Dùng giới từ chưa đúng.";
+  if (m.rule?.category?.id === "CONFUSED_WORDS") return "Dễ nhầm từ: kiểm tra lại nghĩa của từ này.";
+  return "Lỗi ngữ pháp (" + (m.shortMessage || m.message || "").slice(0,80) + ").";
+}
+async function grammarCheck(text){
+  if (IN_CLAUDE) return null;
+  try{
+    const ctl = new AbortController(); const t = setTimeout(()=>ctl.abort(), 8000);
+    const res = await fetch("https://api.languagetool.org/v2/check", {method:"POST", body:new URLSearchParams({text, language:"en-US"}), signal:ctl.signal});
+    clearTimeout(t); if (!res.ok) return null;
+    const d = await res.json();
+    return (d.matches||[]).filter(m => LT_KEEP.has(m.rule?.category?.id) && m.replacements?.length).slice(0,3).map(m => {
+      const word = text.substr(m.offset, m.length), rep = m.replacements[0].value;
+      const before = text.slice(0, m.offset).trim().split(/\s+/).filter(Boolean).slice(-1)[0] || "";
+      const after = text.slice(m.offset + m.length).trim().split(/\s+/).filter(Boolean)[0] || "";
+      return {wrong:[before,word,after].join(" ").trim(), right:[before,rep,after].join(" ").trim(), why:ltWhy(m), key:word.toLowerCase()};
+    });
+  }catch(e){ return null; }
+}
+function mergeReview(aiRev, lt){
+  if (!aiRev && !lt) return null;
+  const rv = aiRev ? {...aiRev, fixes:[...aiRev.fixes]} : {fixes:[], better:null, pron:[], praise:"", basic:true};
+  for (const f of (lt||[])){
+    if (rv.fixes.length >= 4) break;
+    if (!rv.fixes.some(x => x.wrong.toLowerCase().includes(f.key))) rv.fixes.push({wrong:f.wrong, right:f.right, why:f.why});
+  }
+  return rv;
+}
 async function askClaude(c, hist, signal){
   const turns = [{role:"user", content: rules(c) + "\n\n(The conversation starts now.)"}, ...turnsOf(hist)];
   const j = await sampleFn.json(turns, {modelTier:"quick", cache:false, signal});
@@ -693,7 +734,7 @@ async function askGemini(c, hist, signal){
   const contents = [{role:"user", parts:[{text:"(start)"}]}, ...turnsOf(hist).map(t=>({role:t.role==="assistant"?"model":"user", parts:[{text:t.content}]}))];
   const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
     method:"POST", signal, headers:{"Content-Type":"application/json","x-goog-api-key":settings.geminiKey},
-    body: JSON.stringify({systemInstruction:{parts:[{text:rules(c)}]}, contents, generationConfig:{responseMimeType:"application/json", temperature:0.9, thinkingConfig:{thinkingBudget:0}}})
+    body: JSON.stringify({systemInstruction:{parts:[{text:rules(c)}]}, contents, generationConfig:{responseMimeType:"application/json", temperature:0.7, thinkingConfig:{thinkingBudget:512}}})
   });
   if (!res.ok){ const err = new Error("gemini " + res.status); err.status = res.status; throw err; }
   const data = await res.json();
@@ -928,11 +969,11 @@ function reviewCard(m){
   const chips = el("div",{class:"rv-chips"});
   if (hasConf){
     const p = Math.round(m.conf*100), cls = p>=85?"good":p>=65?"mid":"low";
-    chips.append(el("span",{class:"rv-chip "+cls,title:"Máy nghe rõ câu của bạn đến mức nào"}, "Độ rõ phát âm ", el("b",{},p+"%")));
+    chips.append(el("span",{class:"rv-chip "+cls,title:"Mức máy chắc chắn về những từ nó nghe được. Không phải điểm đúng sai: nếu câu trong bong bóng khác câu bạn định nói, từ đó cần luyện phát âm."}, "Máy nghe rõ ", el("b",{},p+"%")));
   }
   if (rv){
     const n = rv.fixes.length;
-    chips.append(el("span",{class:"rv-chip "+(n?"mid":"good")}, n ? `Ngữ pháp: ${n} lỗi` : "Ngữ pháp: chuẩn"));
+    chips.append(el("span",{class:"rv-chip "+(n?"mid":"good")}, (rv.basic ? "Ngữ pháp cơ bản: " : "Ngữ pháp: ") + (n ? n + " lỗi" : "chưa thấy lỗi")));
     if (rv.pron.length) chips.append(el("span",{class:"rv-chip mid"}, `Phát âm: ${rv.pron.length} từ cần chú ý`));
   }
   card.append(el("div",{class:"rv-head"}, el("b",{},"Nhận xét"), chips));
@@ -947,9 +988,8 @@ function reviewCard(m){
       el("small",{},"Cách nói tự nhiên hơn"), el("div",{class:"r"},rv.better),
       el("div",{class:"tools",style:"margin-top:6px"}, el("button",{class:"tool",html:ICON.speaker+"Nghe",onclick:()=>speak(rv.better,c)}), el("button",{class:"tool",html:ICON.repeat+"Luyện câu này",onclick:()=>openShadow(rv.better)}))));
     if (rv.praise) card.append(el("p",{class:"rv-praise"}, rv.praise));
-  } else {
-    card.append(el("p",{class:"help"},"Chế độ kịch bản chỉ chấm độ rõ. Bật AI trong Cài đặt để được sửa ngữ pháp và phát âm."));
   }
+  if (!rv || rv.basic) card.append(el("p",{class:"help"}, rv ? "Đang chạy không có AI nên chỉ kiểm tra ngữ pháp cơ bản, chưa bắt được từ bị nghe nhầm. Dán mã Gemini trong Cài đặt để được sửa đầy đủ." : "Đang chạy không có AI nên chỉ chấm độ rõ. Dán mã Gemini trong Cài đặt để được sửa ngữ pháp và phát âm."));
   if (hasConf && m.conf < 0.65) card.append(el("p",{class:"help"},"Máy nghe chưa rõ. Thử nói chậm hơn, phát âm rõ phụ âm cuối (như -s, -t, -d)."));
   return card;
 }
@@ -1009,7 +1049,8 @@ async function sendUser(text, viaVoice, conf){
   $("#log").append(typing); scrollLog();
   state.ctl = new AbortController();
   let r;
-  try{ r = await askAI(c, state.hist, state.ctl.signal); }
+  const ltP = grammarCheck(text);
+  try{ r = await askAI(c, state.hist, state.ctl.signal); r.review = mergeReview(r.review, await ltP); }
   catch(e){ typing.remove(); state.busy=false; setStatus("idle"); return; }
   typing.remove();
   if (state.c !== c || $("#chat").hidden) { state.busy=false; return; }
