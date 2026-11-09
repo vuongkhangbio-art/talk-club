@@ -712,7 +712,8 @@ async function grammarCheck(text){
       const word = text.substr(m.offset, m.length), rep = m.replacements[0].value;
       const before = text.slice(0, m.offset).trim().split(/\s+/).filter(Boolean).slice(-1)[0] || "";
       const after = text.slice(m.offset + m.length).trim().split(/\s+/).filter(Boolean)[0] || "";
-      return {wrong:[before,word,after].join(" ").trim(), right:[before,rep,after].join(" ").trim(), why:ltWhy(m), key:word.toLowerCase()};
+      const j = arr => arr.join(" ").trim().replace(/ (n't|'[a-z]+)/gi, "$1");
+      return {wrong:j([before,word,after]), right:j([before,rep,after]), why:ltWhy(m), key:word.toLowerCase()};
     });
   }catch(e){ return null; }
 }
