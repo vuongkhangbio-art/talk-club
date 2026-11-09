@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="vi">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Talk Club</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: app shell — home (missions + cast grid) and a talk room (animated character stage + chat + big mic). */
+:root{
+  --bg:#EEF3F1; --surface:#FFFFFF; --surface-2:#F6F9F8; --ink:#1C2A33; --muted:#5B6A73; --line:#D8E2DE;
+  --accent:#FF6B3D; --accent-ink:#FFFFFF; --teal:#1F8A7D; --teal-soft:#D7EEEA; --warn:#C9551F; --good:#23915F; --good-soft:#DDF2E6; --bad:#C23B4A;
+  --us:#3466D6; --uk:#B8364A; --au:#D28F0E; --in:#20925A;
+  --bubble-ai:#FFFFFF; --bubble-me:#1F8A7D; --bubble-me-ink:#FFFFFF;
+  --shadow:0 6px 24px rgba(28,42,51,.08);
+  --f-display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --f-body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F171B; --surface:#172228; --surface-2:#1C2930; --ink:#E6EEF0; --muted:#9AABB3; --line:#2A3A42;
+  --accent:#FF7F55; --accent-ink:#1A0E08; --teal:#45B5A6; --teal-soft:#183A36; --warn:#F08A55; --good:#4CC48A; --good-soft:#163628; --bad:#F06B7A;
+  --us:#6F95F0; --uk:#E26A7E; --au:#F0B43C; --in:#4CC48A;
+  --bubble-ai:#1E2C33; --bubble-me:#2A7F74; --bubble-me-ink:#F2FFFC; --shadow:0 6px 24px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F171B; --surface:#172228; --surface-2:#1C2930; --ink:#E6EEF0; --muted:#9AABB3; --line:#2A3A42;
+  --accent:#FF7F55; --accent-ink:#1A0E08; --teal:#45B5A6; --teal-soft:#183A36; --warn:#F08A55; --good:#4CC48A; --good-soft:#163628; --bad:#F06B7A;
+  --us:#6F95F0; --uk:#E26A7E; --au:#F0B43C; --in:#4CC48A;
+  --bubble-ai:#1E2C33; --bubble-me:#2A7F74; --bubble-me-ink:#F2FFFC; --shadow:0 6px 24px rgba(0,0,0,.35); color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.15;margin:0;text-wrap:balance}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.view{min-height:100%}
+
+/* ---------- Home ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:14px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{width:38px;height:38px;border-radius:12px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink)}
+.brand h1{font-size:24px;font-weight:800;letter-spacing:.2px}
+.icon-btn{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line)}
+.icon-btn svg{width:20px;height:20px}
+.hello{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;padding-block:6px 14px}
+.hello h2{font-size:clamp(24px,5vw,34px);font-weight:800}
+.hello p{margin:2px 0 0;color:var(--muted)}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-weight:600;font-size:13px;white-space:nowrap}
+.chip svg{width:16px;height:16px}
+.chip.fire{color:var(--warn)}
+.home-grid{display:grid;grid-template-columns:1fr;gap:16px;padding-bottom:40px}
+@media(min-width:900px){.home-grid{grid-template-columns:360px 1fr;align-items:start}.side{position:sticky;top:16px}}
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px}
+.card h3{font-size:19px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card .sub{color:var(--muted);font-size:13px;margin:2px 0 10px}
+.level{display:flex;flex-direction:column;gap:6px}
+.bar{height:8px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--teal);border-radius:99px;transition:width .5s}
+.missions{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.mission{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center}
+.mission .tick{width:28px;height:28px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center}
+.mission.done .tick{background:var(--good);border-color:var(--good);color:#fff}
+.mission .tick svg{width:16px;height:16px}
+.mission .t{font-weight:600;font-size:14px;line-height:1.3}
+.mission .bar{margin-top:5px;height:6px}
+.mission.done .bar>i{background:var(--good)}
+.mission .n{font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);font-weight:600}
+.cod{display:grid;grid-template-columns:96px 1fr;gap:14px;align-items:center}
+.cod .av{width:96px;height:96px;border-radius:24px;overflow:hidden}
+.cod .eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.cod h4{font-family:var(--f-display);font-size:22px;margin:0;line-height:1.1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:14px;font-weight:700;background:var(--accent);color:var(--accent-ink);min-height:44px}
+.btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:7px 12px;min-height:36px;font-size:13px;border-radius:11px}
+.btn svg{width:18px;height:18px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filter{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:13px}
+.filter[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.cast-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.cast-head h3{font-size:22px}
+.cast{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:12px}
+.person{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:10px 10px 12px;text-align:left;display:flex;flex-direction:column;gap:8px;transition:transform .15s, box-shadow .15s;position:relative}
+.person:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.person .av{aspect-ratio:1;border-radius:16px;overflow:hidden;max-width:100%}
+.person .name{font-family:var(--f-display);font-weight:700;font-size:19px;line-height:1}
+.person .topic{font-size:13px;color:var(--muted);line-height:1.3}
+.person .done-badge{position:absolute;top:16px;right:16px;background:var(--good);color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:3px 8px}
+.accent{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c)}
+.accent::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+.acc-us{--c:var(--us)}.acc-uk{--c:var(--uk)}.acc-au{--c:var(--au)}.acc-in{--c:var(--in)}
+.av svg{display:block;width:100%;height:100%}
+
+/* ---------- Talk room ---------- */
+#chat{height:100%;display:flex;flex-direction:column}
+.chat-top{width:100%;display:flex;align-items:center;gap:10px;padding-block:10px;border-bottom:1px solid var(--line);background:var(--surface)}
+.chat-top .who{flex:1;min-width:0}
+.chat-top .who b{font-family:var(--f-display);font-size:20px;display:block;line-height:1.1}
+.chat-top .who span{font-size:12px;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.room{flex:1;min-height:0;display:grid;grid-template-rows:auto 1fr;max-width:1080px;width:100%;margin:0 auto}
+@media(min-width:900px){.room{grid-template-columns:380px 1fr;grid-template-rows:1fr;gap:20px;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}}
+.stage{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));background:var(--surface-2);border-bottom:1px solid var(--line);min-width:0}
+@media(min-width:900px){.stage{grid-template-columns:1fr;align-content:start;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:20px;overflow:auto}}
+.puppet{position:relative;width:120px;aspect-ratio:1;max-width:100%}
+@media(min-width:900px){.puppet{width:min(300px,100%);margin:0 auto}}
+.puppet .av{width:100%;height:100%;border-radius:28px;overflow:hidden;position:relative;z-index:1}
+.puppet::after{content:"";position:absolute;inset:-6px;border-radius:34px;border:3px solid transparent;z-index:0}
+.puppet.listening::after{border-color:var(--accent);animation:pulse 1.2s ease-in-out infinite}
+.puppet.talking::after{border-color:var(--teal)}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.04);opacity:.5}}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.status.on i{background:var(--accent)}
+.status.talk i{background:var(--teal)}
+.stage-info{display:flex;flex-direction:column;gap:8px;min-width:0}
+.mission-box{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:8px 10px;font-size:13px;line-height:1.35}
+@media(min-width:900px){.mission-box{background:var(--surface-2)}}
+.mission-box b{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
+.mission-box.done{border-style:solid;border-color:var(--good);background:var(--good-soft)}
+.mission-box.done b{color:var(--good)}
+.phrases{display:none;flex-direction:column;gap:6px}
+@media(min-width:900px){.phrases{display:flex}}
+.phrases h5{margin:6px 0 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.phrase{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:8px 10px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);font-size:14px;font-weight:600}
+.phrase small{font-weight:400;color:var(--muted);font-size:12px}
+.talk-col{display:flex;flex-direction:column;min-height:0;min-width:0}
+@media(min-width:900px){.talk-col{background:var(--surface);border:1px solid var(--line);border-radius:24px;overflow:hidden}}
+.log{flex:1;overflow-y:auto;padding:14px max(16px,env(safe-area-inset-right,0px)) 14px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:12px;overscroll-behavior:contain}
+.msg{max-width:min(560px,88%);display:flex;flex-direction:column;gap:6px;min-width:0}
+.msg.ai{align-self:flex-start}
+.msg.me{align-self:flex-end;align-items:flex-end}
+.bubble{padding:10px 14px;border-radius:18px;font-size:15.5px;line-height:1.45;overflow-wrap:anywhere}
+.ai .bubble{background:var(--bubble-ai);border:1px solid var(--line);border-top-left-radius:6px}
+.me .bubble{background:var(--bubble-me);color:var(--bubble-me-ink);border-top-right-radius:6px}
+.vi{font-size:13.5px;color:var(--muted);padding:0 4px;font-style:italic}
+.tools{display:flex;gap:4px;flex-wrap:wrap}
+.tool{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:600;color:var(--muted);border:1px solid var(--line);background:var(--surface)}
+.tool svg{width:14px;height:14px}
+.fix{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:12px;padding:8px 10px;font-size:13.5px;max-width:100%;color:var(--ink)}
+.fix .w{text-decoration:line-through;color:var(--bad)}
+.fix .r{color:var(--good);font-weight:700}
+.fix p{margin:4px 0 0;color:var(--muted)}
+.fix.ok{border-left-color:var(--good)}
+.review{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:13.5px;width:min(460px,100%);display:flex;flex-direction:column;gap:8px;color:var(--ink);text-align:left}
+.rv-head{display:flex;flex-direction:column;gap:6px}
+.rv-head>b{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
+.rv-chips{display:flex;gap:6px;flex-wrap:wrap}
+.rv-chip{font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2)}
+.rv-chip.good{color:var(--good);border-color:var(--good)}
+.rv-chip.mid{color:var(--warn);border-color:var(--warn)}
+.rv-chip.low{color:var(--bad);border-color:var(--bad)}
+.rv-item{border-left:3px solid var(--warn);padding:2px 0 2px 9px}
+.rv-item p{margin:3px 0 0;color:var(--muted)}
+.rv-item.pron{border-left-color:var(--us)}
+.rv-item.better{border-left-color:var(--good)}
+.rv-item small{display:block;color:var(--muted);font-size:11.5px;font-weight:600}
+.rv-item .w{text-decoration:line-through;color:var(--bad)}
+.rv-item .r{color:var(--good);font-weight:700}
+.rv-word{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.rv-word b{font-size:15px}
+.rv-praise{margin:0;color:var(--teal);font-weight:600}
+.typing{display:inline-flex;gap:4px;padding:14px 16px}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:dot 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes dot{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+.sys{align-self:center;font-size:12.5px;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);padding:5px 12px;border-radius:999px;text-align:center;max-width:92%}
+.controls{border-top:1px solid var(--line);background:var(--surface);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:8px}
+.live{min-height:22px;font-size:14px;color:var(--muted);text-align:center;font-style:italic;overflow-wrap:anywhere}
+.ctl-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.side-btn{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:600;color:var(--muted);padding:6px;border-radius:12px}
+.side-btn svg{width:22px;height:22px;color:var(--ink)}
+.mic{width:76px;height:76px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;box-shadow:0 6px 18px rgba(255,107,61,.35);transition:transform .15s}
+.mic svg{width:32px;height:32px}
+.mic:active{transform:scale(.95)}
+.mic.rec{background:var(--bad);animation:pulse 1.1s infinite}
+.mic[disabled]{opacity:.45;cursor:not-allowed}
+.type-row{display:flex;gap:8px}
+.type-row input{flex:1;min-width:0;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:inherit;font-size:16px}
+.tip{font-size:12.5px;color:var(--muted);text-align:center}
+.tip kbd{font-family:inherit;font-weight:700;border:1px solid var(--line);border-radius:6px;padding:0 5px;background:var(--surface-2)}
+
+/* ---------- Sheets / modals ---------- */
+.overlay{position:fixed;inset:0;background:rgba(10,18,22,.5);display:grid;place-items:end center;z-index:50;padding-top:env(safe-area-inset-top,0px)}
+@media(min-width:700px){.overlay{place-items:center}}
+.sheet{background:var(--surface);color:var(--ink);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:24px 24px 0 0;padding:20px max(18px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
+@media(min-width:700px){.sheet{border-radius:24px}}
+.sheet h2{font-size:24px}
+.sheet .row{display:flex;flex-direction:column;gap:6px}
+.sheet label.lbl{font-weight:700;font-size:13px}
+.sheet input[type=text],.sheet input[type=password],.sheet select{padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:inherit;font-size:16px;width:100%}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px}
+.seg label{display:flex;flex-direction:column;gap:2px;border:1px solid var(--line);border-radius:12px;padding:9px 10px;cursor:pointer;font-weight:700;font-size:14px;background:var(--surface-2)}
+.seg label small{font-weight:400;color:var(--muted);font-size:12px;line-height:1.3}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){border-color:var(--teal);background:var(--teal-soft);box-shadow:inset 0 0 0 1px var(--teal)}
+.help{font-size:12.5px;color:var(--muted);margin:0}
+.voices{display:flex;flex-direction:column;gap:6px}
+.vrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:12px;font-size:13px}
+.vrow .vn{min-width:0;overflow-wrap:anywhere;color:var(--muted)}
+.vrow .vn b{color:var(--ink)}
+.vrow .miss{color:var(--warn)}
+.sheet-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.target{font-family:var(--f-display);font-size:22px;line-height:1.3;font-weight:700}
+.target .hit{color:var(--good)}
+.target .miss{color:var(--bad);text-decoration:underline wavy}
+.score{font-family:var(--f-display);font-size:44px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;bottom:calc(110px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:14px;font-weight:600;font-size:14px;z-index:80;max-width:min(92vw,460px);text-align:center;box-shadow:var(--shadow)}
+
+/* ---------- Character animation ---------- */
+.av .eyes{transform-box:fill-box;transform-origin:center;animation:blink 4.2s infinite}
+.av .fig{animation:bob 3.4s ease-in-out infinite}
+.puppet.talking .fig{animation:bob 1.2s ease-in-out infinite}
+.puppet.listening .head-g{transform:rotate(-4deg);transform-box:view-box;transform-origin:100px 150px;transition:transform .3s}
+.head-g{transition:transform .3s}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@media (prefers-reduced-motion: reduce){.av .eyes,.av .fig,.mic.rec,.puppet.listening::after,.typing i{animation:none}}
+</style>
+
+<div id="home" class="view"></div>
+<div id="chat" class="view" hidden></div>
+<div id="modal-root"></div>
+
+<script>
+"use strict";
+/* ================= Data: the cast ================= */
+const ACCENTS = {
+  us:{label:"Mỹ", en:"American", lang:"en-US", spelling:"American"},
+  uk:{label:"Anh", en:"British", lang:"en-GB", spelling:"British"},
+  au:{label:"Úc", en:"Australian", lang:"en-AU", spelling:"Australian/British"},
+  in:{label:"Ấn Độ", en:"Indian", lang:"en-IN", spelling:"British"}
+};
+const CAST = [
+ {id:"emma", cat:"life", name:"Emma", g:"f", acc:"us", age:24, pitch:1.08, vIdx:0,
+  bio:"a cheerful barista at a small coffee shop in Seattle who loves indie music.",
+  topic:"Quán cà phê & làm quen", topicEn:"ordering at a café and small talk",
+  mission:"Gọi 1 đồ uống, hỏi size và giá, rồi bắt chuyện 1 câu.", missionEn:"order a drink, ask about the size and the price, then make one piece of small talk",
+  greet:"Hey there, welcome in! I'm Emma. What can I get started for you today?", greetVi:"Chào bạn, mời vào! Mình là Emma. Hôm nay mình làm gì cho bạn nhé?",
+  phrases:[["Can I get a medium iced latte, please?","Cho mình 1 latte đá size vừa nhé."],["How much is a large one?","Ly lớn bao nhiêu tiền?"],["Could I have less sugar?","Cho mình ít đường được không?"],["It's for here, thanks.","Mình uống tại chỗ, cảm ơn."]],
+  qs:[["What size would you like, small, medium or large?","Bạn muốn size nào, nhỏ, vừa hay lớn?","Medium, please. How much is it?"],["Would you like it hot or iced?","Bạn muốn nóng hay đá?","Iced, please."],["That's four fifty. Is it for here or to go?","4,5 đô. Uống tại chỗ hay mang đi?","For here, thanks."],["So, are you new around here?","Bạn mới tới khu này à?","Yes, I'm visiting from Vietnam."],["What do you usually do on weekends?","Cuối tuần bạn thường làm gì?","I usually meet my friends."]],
+  look:{skin:"#F3CDAE", hair:"#6B3E26", style:"long", shirt:"#2F7D5B", bg:"#CDEBDD", extras:[]}},
+ {id:"jake", cat:"air", name:"Jake", g:"m", acc:"us", age:29, pitch:1.0, vIdx:0,
+  bio:"a travel vlogger from Austin, Texas, who has visited 30 countries.",
+  topic:"Du lịch & sân bay", topicEn:"travel, airports and hotels",
+  mission:"Làm thủ tục bay: nói điểm đến, hỏi về hành lý, chọn chỗ ngồi.", missionEn:"check in for a flight: say the destination, ask about baggage allowance and choose a seat",
+  greet:"Hi! I'm Jake, I'll help you check in today. Where are you flying to?", greetVi:"Chào! Mình là Jake, mình sẽ giúp bạn làm thủ tục. Bạn bay đi đâu?",
+  phrases:[["I'm flying to Singapore.","Tôi bay đi Singapore."],["How many bags can I check in?","Tôi được ký gửi mấy kiện?"],["Can I have a window seat?","Cho tôi ghế cạnh cửa sổ nhé."],["What time does boarding start?","Mấy giờ bắt đầu lên máy bay?"]],
+  qs:[["Can I see your passport, please?","Cho mình xem hộ chiếu nhé?","Sure, here you are."],["Are you checking any bags today?","Hôm nay bạn có ký gửi hành lý không?","Yes, one bag. How many kilos can I bring?"],["Would you like a window or an aisle seat?","Bạn muốn ghế cửa sổ hay lối đi?","A window seat, please."],["What's the main reason for your trip?","Mục đích chính chuyến đi là gì?","I'm traveling for work."],["Have you been there before?","Bạn từng tới đó chưa?","No, it's my first time."]],
+  look:{skin:"#EBC09A", hair:"#C9A24C", style:"short", shirt:"#E07A2E", bg:"#FBE0C8", extras:["cap"], cap:"#2E4A7A"}},
+ {id:"noah", cat:"biz", name:"Noah", g:"m", acc:"us", age:38, pitch:0.92, vIdx:1,
+  bio:"a calm customer-service team lead in Chicago who trains new staff.",
+  topic:"Chăm sóc khách hàng", topicEn:"customer service and handling complaints",
+  mission:"Đóng vai nhân viên: chào khách, xin lỗi, đưa ra 1 cách giải quyết.", missionEn:"play the support agent: greet the upset customer, apologize, and offer one clear solution",
+  greet:"Hi, I'm Noah. Let's practice! I'll be an upset customer. My order arrived late and the box was damaged. What do you say?", greetVi:"Chào, mình là Noah. Mình luyện nhé! Mình đóng vai khách đang bực. Đơn hàng tới trễ và hộp bị móp. Bạn sẽ nói gì?",
+  phrases:[["I'm really sorry for the inconvenience.","Thành thật xin lỗi vì sự bất tiện."],["Could you send me a photo of the package?","Anh/chị gửi giúp ảnh kiện hàng nhé?"],["We'll send you a replacement right away.","Bên em sẽ gửi hàng thay thế ngay."],["Is there anything else I can help with?","Em còn hỗ trợ được gì thêm không ạ?"]],
+  qs:[["I've been waiting a whole week. Why was it so late?","Tôi chờ cả tuần rồi. Sao trễ vậy?","I'm really sorry. There was a delay with the delivery company."],["So what are you going to do about the damaged box?","Vậy bạn xử lý cái hộp móp thế nào?","We can send you a replacement or a full refund."],["How long will that take?","Mất bao lâu?","About three to five days."],["Okay. Can I get a discount next time?","Được. Lần sau tôi được giảm giá không?","Yes, here is a ten percent discount code for you."],["Great job! How did that feel?","Tốt lắm! Bạn thấy thế nào?","It was a little hard but fun."]],
+  look:{skin:"#8D5A3B", hair:"#1E1A1A", style:"short", shirt:"#3E5A99", bg:"#D6E0F5", extras:["beard"]}},
+ {id:"olivia", cat:"biz", name:"Olivia", g:"f", acc:"uk", age:35, pitch:1.0, vIdx:0,
+  bio:"a friendly but sharp HR manager at a tech company in London.",
+  topic:"Phỏng vấn xin việc", topicEn:"a job interview",
+  mission:"Giới thiệu bản thân, nêu 2 điểm mạnh và kể 1 kinh nghiệm làm việc.", missionEn:"introduce yourself, name two strengths and describe one work experience with a result",
+  greet:"Good morning, lovely to meet you. I'm Olivia from HR. Shall we start? Could you tell me a bit about yourself?", greetVi:"Chào buổi sáng, rất vui gặp bạn. Mình là Olivia phòng nhân sự. Bắt đầu nhé? Bạn giới thiệu đôi chút về bản thân được không?",
+  phrases:[["I have five years of experience in e-commerce.","Tôi có 5 năm kinh nghiệm thương mại điện tử."],["One of my strengths is problem-solving.","Một điểm mạnh của tôi là giải quyết vấn đề."],["I led a team that doubled our sales.","Tôi dẫn dắt nhóm giúp doanh số tăng gấp đôi."],["Could you tell me more about the role?","Anh/chị nói thêm về vị trí này được không?"]],
+  qs:[["What are your two biggest strengths?","Hai điểm mạnh lớn nhất của bạn là gì?","I'm organised and I learn quickly."],["Can you give me an example of a challenge at work?","Cho mình một ví dụ về khó khăn trong công việc?","Once our sales dropped, so I changed our ads."],["What was the result?","Kết quả thế nào?","Sales went up by thirty percent."],["Where do you see yourself in five years?","5 năm tới bạn thấy mình ở đâu?","I want to run my own business."],["Do you have any questions for me?","Bạn có câu hỏi nào cho mình không?","Yes, what does a normal day look like?"]],
+  look:{skin:"#F6D7C3", hair:"#2A1F1D", style:"bob", shirt:"#8A3B5C", bg:"#F3D9E2", extras:["glasses","earrings"]}},
+ {id:"harry", cat:"life", name:"Harry", g:"m", acc:"uk", age:42, pitch:0.95, vIdx:0,
+  bio:"a jolly chef who runs a cosy restaurant in Manchester.",
+  topic:"Ẩm thực & nhà hàng", topicEn:"food, cooking and ordering at a restaurant",
+  mission:"Gọi món: hỏi món nên thử, nói 1 món dị ứng, gọi đồ uống.", missionEn:"order a meal: ask for a recommendation, mention one food allergy, and order a drink",
+  greet:"Evening! I'm Harry, the chef here. Have a seat. Fancy hearing today's specials?", greetVi:"Chào buổi tối! Mình là Harry, đầu bếp ở đây. Mời ngồi. Muốn nghe món đặc biệt hôm nay không?",
+  phrases:[["What do you recommend?","Anh gợi ý món nào?"],["I'm allergic to peanuts.","Tôi dị ứng đậu phộng."],["I'll have the fish and chips, please.","Cho tôi món cá và khoai tây chiên."],["Could we get the bill, please?","Cho xin hoá đơn nhé."]],
+  qs:[["Today we've got roast chicken and a lovely fish pie. Which sounds good?","Hôm nay có gà quay và bánh cá. Bạn thích món nào?","The fish pie sounds good."],["Any allergies I should know about?","Bạn có dị ứng gì không?","Yes, I'm allergic to shrimp."],["And what would you like to drink?","Bạn uống gì?","Just a lemon tea, please."],["What's your favourite Vietnamese dish?","Món Việt bạn thích nhất là gì?","I love pho, especially in the morning."],["Do you cook at home much?","Bạn có hay nấu ăn ở nhà không?","Sometimes, on weekends."]],
+  look:{skin:"#F1C7A6", hair:"#B5532A", style:"short", shirt:"#F2F2EE", bg:"#F6E3CF", extras:["beard"]}},
+ {id:"sophie", cat:"life", name:"Sophie", g:"f", acc:"uk", age:26, pitch:1.12, vIdx:1,
+  bio:"a chatty shop assistant at a clothing store on Oxford Street.",
+  topic:"Mua sắm & đổi trả", topicEn:"shopping, sizes and returning items",
+  mission:"Đổi trả hàng: nói món hàng, nêu lỗi, yêu cầu đổi hoặc hoàn tiền.", missionEn:"return an item: say what you bought, explain the problem, and ask for an exchange or a refund",
+  greet:"Hiya, I'm Sophie! Welcome to the shop. Are you looking for anything in particular today?", greetVi:"Chào, mình là Sophie! Chào mừng tới cửa hàng. Hôm nay bạn tìm món gì đặc biệt không?",
+  phrases:[["I'd like to return this jacket.","Tôi muốn trả lại chiếc áo khoác này."],["It's too small for me.","Nó hơi chật với tôi."],["Can I exchange it for a bigger size?","Tôi đổi size lớn hơn được không?"],["Here's my receipt.","Đây là hoá đơn của tôi."]],
+  qs:[["Oh no, what's wrong with it?","Ôi, nó bị sao vậy?","There's a hole in the sleeve."],["Have you got the receipt with you?","Bạn có mang hoá đơn không?","Yes, here it is."],["Would you prefer an exchange or a refund?","Bạn muốn đổi hay hoàn tiền?","An exchange, please. In a medium size."],["Do you enjoy shopping online or in stores more?","Bạn thích mua online hay tại cửa hàng hơn?","Online, because it's faster."],["Is there anything else I can help you with?","Mình giúp gì thêm không?","No, that's all. Thank you!"]],
+  look:{skin:"#FAD9C0", hair:"#D9A441", style:"long", shirt:"#5A4FC2", bg:"#E2DDF8", extras:["earrings"]}},
+ {id:"chloe", cat:"life", name:"Chloe", g:"f", acc:"au", age:22, pitch:1.1, vIdx:0,
+  bio:"a uni student and surfer in Sydney who works part-time at a bookshop.",
+  topic:"Sở thích & cuối tuần", topicEn:"hobbies, free time and weekend plans",
+  mission:"Kể 2 sở thích, rồi cùng Chloe lên 1 kế hoạch cuối tuần.", missionEn:"talk about two hobbies, then agree on a weekend plan together (what, when, where)",
+  greet:"G'day! I'm Chloe. Just got back from the beach. So what do you love doing in your free time?", greetVi:"Chào! Mình là Chloe. Mình vừa đi biển về. Lúc rảnh bạn thích làm gì?",
+  phrases:[["I'm really into photography.","Mình rất mê chụp ảnh."],["In my free time, I usually go jogging.","Lúc rảnh mình thường chạy bộ."],["How about Saturday morning?","Sáng thứ Bảy thì sao?"],["Sounds like a plan!","Chốt vậy nhé!"]],
+  qs:[["Oh nice! How did you get into that?","Hay quá! Sao bạn bắt đầu thích nó?","My friend showed me when I was in university."],["What's another thing you enjoy?","Còn gì khác bạn thích không?","I also like watching movies."],["Wanna do something together this weekend?","Cuối tuần đi chơi cùng không?","Sure! How about the cinema on Saturday?"],["What time works for you?","Mấy giờ thì tiện cho bạn?","Around seven in the evening."],["Have you ever tried surfing?","Bạn thử lướt sóng bao giờ chưa?","No, but I'd love to try."]],
+  look:{skin:"#F0C8A2", hair:"#E8C26A", style:"ponytail", shirt:"#1FA3A3", bg:"#CFF0EE", extras:[]}},
+ {id:"liam", cat:"life", name:"Liam", g:"m", acc:"au", age:31, pitch:0.98, vIdx:0,
+  bio:"an upbeat personal trainer in Melbourne who loves cooking healthy food.",
+  topic:"Sức khoẻ & thói quen", topicEn:"health, fitness and daily routines",
+  mission:"Kể thói quen một ngày của bạn và đặt 1 mục tiêu sức khoẻ.", missionEn:"describe your daily routine and set one health goal with a time frame",
+  greet:"Hey mate, Liam here! Let's talk healthy habits. What does a normal day look like for you?", greetVi:"Chào bạn, Liam đây! Nói về thói quen lành mạnh nhé. Một ngày bình thường của bạn ra sao?",
+  phrases:[["I usually wake up at six.","Mình thường dậy lúc 6 giờ."],["I sit at my desk all day.","Mình ngồi bàn làm việc cả ngày."],["I want to lose three kilos in two months.","Mình muốn giảm 3 ký trong 2 tháng."],["I don't get enough sleep.","Mình ngủ không đủ."]],
+  qs:[["What time do you usually go to bed?","Bạn thường đi ngủ lúc mấy giờ?","Usually around midnight."],["How often do you exercise?","Bạn tập thể dục thường xuyên không?","Twice a week, maybe."],["What do you usually eat for lunch?","Bữa trưa bạn hay ăn gì?","Usually rice with meat and vegetables."],["What's one health goal you'd like to reach?","Một mục tiêu sức khoẻ bạn muốn đạt là gì?","I want to run five kilometres."],["By when would you like to do that?","Bạn muốn đạt khi nào?","By the end of next month."]],
+  look:{skin:"#C98E66", hair:"#2B1D14", style:"curly", shirt:"#D94F3D", bg:"#F8D9D2", extras:["headband"], band:"#F2C230"}},
+ {id:"priya", cat:"biz", name:"Priya", g:"f", acc:"in", age:30, pitch:1.05, vIdx:0,
+  bio:"an e-commerce entrepreneur in Bangalore who sells handmade home decor online.",
+  topic:"Kinh doanh & bán hàng online", topicEn:"business, products and selling online",
+  mission:"Chào bán 1 sản phẩm: tên, giá, khách hàng mục tiêu và lý do nên mua.", missionEn:"pitch one product: its name, price, target customer and the main reason to buy it",
+  greet:"Hello! I'm Priya, I run an online shop too. I'd love to hear about your business. What products do you sell?", greetVi:"Xin chào! Mình là Priya, mình cũng có shop online. Mình muốn nghe về việc kinh doanh của bạn. Bạn bán sản phẩm gì?",
+  phrases:[["Our best-seller is a handmade candle.","Sản phẩm bán chạy nhất là nến thủ công."],["It costs around twenty dollars.","Giá khoảng 20 đô."],["Our main customers are young families.","Khách chính là các gia đình trẻ."],["What makes it special is the quality.","Điểm đặc biệt là chất lượng."]],
+  qs:[["Interesting! Who are your main customers?","Hay đấy! Khách hàng chính của bạn là ai?","Mostly young women aged twenty to thirty-five."],["And how much does it cost?","Giá bao nhiêu?","It's about two hundred thousand dong."],["Why should someone buy yours and not a competitor's?","Vì sao khách nên mua của bạn thay vì đối thủ?","Our quality is better and we deliver fast."],["Which platform sells best for you?","Sàn nào bán tốt nhất với bạn?","Shopee sells best for us."],["What's your biggest challenge right now?","Thử thách lớn nhất hiện tại là gì?","Finding good suppliers."]],
+  look:{skin:"#A8724F", hair:"#141010", style:"bun", shirt:"#E0A21B", bg:"#FBEBC4", extras:["earrings"]}},
+ {id:"arjun", cat:"life", name:"Arjun", g:"m", acc:"in", age:27, pitch:1.02, vIdx:0,
+  bio:"a master's student and study-abroad mentor from Mumbai.",
+  topic:"Du học & thạc sĩ", topicEn:"studying, university and master's degrees",
+  mission:"Giải thích vì sao bạn muốn học thạc sĩ và kế hoạch sau khi học.", missionEn:"explain why you want to do a master's degree, what you'll study, and your plan after graduating",
+  greet:"Hi, I'm Arjun! I'm doing my master's right now. I heard you're planning one too. What would you like to study?", greetVi:"Chào, mình là Arjun! Mình đang học thạc sĩ. Nghe nói bạn cũng định học. Bạn muốn học ngành gì?",
+  phrases:[["I want to study Business and Commerce.","Mình muốn học Kinh doanh Thương mại."],["I want to deepen my knowledge.","Mình muốn hiểu sâu hơn."],["After graduating, I plan to start my own company.","Sau khi tốt nghiệp, mình định mở công ty."],["I'm preparing for the English test.","Mình đang ôn thi tiếng Anh."]],
+  qs:[["Why do you want to do a master's degree?","Sao bạn muốn học thạc sĩ?","Because I want to grow my business skills."],["Which university are you applying to?","Bạn nộp vào trường nào?","A business university in my city."],["How are you preparing for it?","Bạn chuẩn bị thế nào?","I study English every day."],["What will you do after you graduate?","Sau khi tốt nghiệp bạn làm gì?","I plan to start my own brand."],["Will you study and work at the same time?","Bạn vừa học vừa làm à?","Yes, I'll run a small online shop."]],
+  look:{skin:"#9C6644", hair:"#1A1414", style:"side", shirt:"#2D6E8E", bg:"#D3E9F2", extras:["glasses"]}},
+ /* ---- Business ---- */
+ {id:"daniel", cat:"biz", name:"Daniel", g:"m", acc:"uk", age:46, pitch:0.93, vIdx:1,
+  bio:"a procurement director at a furniture company in Bristol, a tough but fair negotiator.",
+  topic:"Thương thảo hợp đồng", topicEn:"negotiating a supply contract: price, quantity, payment terms and delivery",
+  mission:"Thương lượng giá tốt hơn, chốt điều khoản thanh toán và ngày giao hàng.", missionEn:"negotiate a better unit price, agree on payment terms and a delivery date, then confirm the deal",
+  greet:"Good afternoon, thanks for coming in. I'm Daniel. We've looked at your quote and, to be honest, the price is a bit high for us. How much room do you have to move?", greetVi:"Chào buổi chiều, cảm ơn đã tới. Tôi là Daniel. Chúng tôi xem báo giá rồi, nói thật là giá hơi cao. Bên bạn linh động được tới đâu?",
+  phrases:[["If you order 1,000 units, we can offer a 5% discount.","Nếu đặt 1.000 sản phẩm, bên tôi giảm 5%."],["What payment terms do you have in mind?","Anh muốn điều khoản thanh toán thế nào?"],["We can deliver within 30 days of the deposit.","Bên tôi giao trong 30 ngày sau khi nhận cọc."],["Let's put that in the contract.","Mình ghi điều đó vào hợp đồng nhé."]],
+  qs:[["What's your best price if we order two thousand units?","Giá tốt nhất nếu đặt 2.000 sản phẩm?","For two thousand units, we can offer eight dollars each."],["We usually pay sixty days after delivery. Does that work for you?","Bên tôi thường trả 60 ngày sau giao. Bên bạn chịu không?","Could we do a thirty percent deposit and the rest in thirty days?"],["How quickly can you deliver?","Bên bạn giao nhanh cỡ nào?","Within thirty days after we receive the deposit."],["What happens if the goods arrive damaged?","Nếu hàng tới bị hỏng thì sao?","We will replace them free of charge."],["Right, I think we have a deal. Shall we sign next week?","Được, tôi nghĩ ta chốt. Tuần sau ký nhé?","Great. I'll send you the contract by Friday."]],
+  look:{skin:"#E9BFA0", hair:"#4A3428", style:"side", shirt:"#2B3A55", bg:"#DCE3EE", extras:[]}},
+ {id:"sarah", cat:"biz", name:"Sarah", g:"f", acc:"us", age:39, pitch:1.0, vIdx:1,
+  bio:"a sharp but friendly marketing director in New York who runs the weekly team meeting.",
+  topic:"Họp & thuyết trình kinh doanh", topicEn:"business meetings and presenting monthly results",
+  mission:"Báo cáo kết quả tháng: 1 con số chính, 1 nguyên nhân, 1 đề xuất cho tháng sau.", missionEn:"present monthly results: one key number, one reason behind it, and one proposal for next month",
+  greet:"Morning, everyone, let's get started. I'm Sarah. You're up first. How did your team do last month?", greetVi:"Chào buổi sáng mọi người, bắt đầu nhé. Mình là Sarah. Bạn báo cáo trước. Tháng rồi nhóm bạn làm thế nào?",
+  phrases:[["Sales went up by 15% compared to last month.","Doanh số tăng 15% so với tháng trước."],["This was mainly because of our new ads.","Chủ yếu nhờ quảng cáo mới."],["I'd like to propose increasing our budget.","Tôi đề xuất tăng ngân sách."],["Does anyone have any questions?","Mọi người có câu hỏi nào không?"]],
+  qs:[["What was the main reason for that result?","Nguyên nhân chính của kết quả đó là gì?","Mainly because of our new video ads."],["Which product performed best?","Sản phẩm nào chạy tốt nhất?","Our new gift set performed best."],["What would you like to do differently next month?","Tháng tới bạn muốn làm gì khác?","I'd like to focus more on livestream sales."],["How much budget would you need for that?","Bạn cần bao nhiêu ngân sách?","Around five thousand dollars."],["Great. Can you send me a summary after the meeting?","Tốt. Gửi mình bản tóm tắt sau họp nhé?","Sure, I'll email it to you this afternoon."]],
+  look:{skin:"#F2CBB0", hair:"#8B4A2B", style:"bob", shirt:"#1F6F8B", bg:"#D5ECF2", extras:["earrings"]}},
+ {id:"rohan", cat:"biz", name:"Rohan", g:"m", acc:"in", age:36, pitch:0.97, vIdx:1,
+  bio:"a factory sales manager in Delhi who exports home goods and kitchenware.",
+  topic:"Tìm nguồn hàng & nhà cung cấp", topicEn:"sourcing products from a supplier: minimum order, price, samples, packaging and shipping",
+  mission:"Hỏi nhà cung cấp về số lượng tối thiểu, giá, hàng mẫu và thời gian sản xuất.", missionEn:"ask the supplier about minimum order quantity, price, samples and production time",
+  greet:"Hello and namaste! I'm Rohan from the factory sales team. Thank you for your enquiry. Which products are you interested in?", greetVi:"Xin chào! Tôi là Rohan, phòng kinh doanh nhà máy. Cảm ơn bạn đã hỏi hàng. Bạn quan tâm sản phẩm nào?",
+  phrases:[["What's your minimum order quantity?","Số lượng đặt tối thiểu là bao nhiêu?"],["Could you send us some samples?","Anh gửi bên tôi vài mẫu được không?"],["How long does production take?","Sản xuất mất bao lâu?"],["Can you print our logo on the box?","In logo bên tôi lên hộp được không?"]],
+  qs:[["Our minimum order is five hundred pieces. How many were you thinking?","Tối thiểu 500 cái. Bạn định đặt bao nhiêu?","We'd like to start with five hundred pieces."],["Would you like samples first? They cost twenty dollars plus shipping.","Bạn muốn lấy mẫu trước không? 20 đô cộng phí ship.","Yes, please send three samples first."],["Do you need custom packaging with your logo?","Bạn cần bao bì in logo riêng không?","Yes, can you print our logo on the box?"],["Production takes about three weeks. Is that okay?","Sản xuất khoảng 3 tuần. Được không?","That's fine. How will you ship the goods?"],["Shall I send you a formal quotation by email?","Tôi gửi báo giá chính thức qua email nhé?","Yes, please send it to me today."]],
+  look:{skin:"#9A6342", hair:"#161212", style:"short", shirt:"#5B7F3A", bg:"#E1EDD3", extras:["beard"]}},
+ /* ---- Airport & on board ---- */
+ {id:"grace", cat:"air", name:"Grace", g:"f", acc:"au", age:41, pitch:0.98, vIdx:1,
+  bio:"an experienced border officer at Sydney Airport, polite but thorough.",
+  topic:"Nhập cảnh & hải quan", topicEn:"immigration and customs at the airport",
+  mission:"Trả lời nhân viên nhập cảnh: mục đích chuyến đi, ở bao lâu, ở đâu và khai báo hành lý.", missionEn:"answer the officer: purpose of visit, length of stay, where you'll stay, and declare what's in your luggage",
+  greet:"Good morning, welcome to Australia. I'm Officer Grace. May I see your passport and arrival card, please?", greetVi:"Chào buổi sáng, chào mừng tới Úc. Tôi là nhân viên Grace. Cho tôi xem hộ chiếu và thẻ nhập cảnh nhé?",
+  phrases:[["I'm here on holiday for ten days.","Tôi đi du lịch 10 ngày."],["I'm staying at a hotel in the city centre.","Tôi ở khách sạn trung tâm."],["I have nothing to declare.","Tôi không có gì cần khai báo."],["It's a gift for my friend.","Đây là quà cho bạn tôi."]],
+  qs:[["What's the purpose of your visit?","Mục đích chuyến đi là gì?","I'm here for a business trip."],["How long will you be staying?","Bạn ở bao lâu?","For one week."],["Where will you be staying?","Bạn ở đâu?","At a hotel near Darling Harbour."],["Are you carrying any food, medicine or more than ten thousand dollars?","Bạn có mang thực phẩm, thuốc hay trên 10.000 đô không?","Just some dried fruit and my medicine."],["Do you have a return ticket?","Bạn có vé khứ hồi không?","Yes, I fly back next Sunday."]],
+  look:{skin:"#6E4630", hair:"#1C1515", style:"curly", shirt:"#3B4F7A", bg:"#DCE2F2", extras:["cap"], cap:"#22314F"}},
+ {id:"ella", cat:"air", name:"Ella", g:"f", acc:"uk", age:28, pitch:1.1, vIdx:2,
+  bio:"a cheerful flight attendant on a long-haul flight from London.",
+  topic:"Trên máy bay (hành khách)", topicEn:"on board a flight as a passenger: meals, drinks, seats, requests and problems",
+  mission:"Chọn suất ăn, xin thêm 1 thứ, và nhờ giúp 1 vấn đề (ghế, hành lý hoặc chuyến nối).", missionEn:"as a passenger: choose a meal, ask for one extra item, and get help with one problem (seat, luggage or connecting flight)",
+  greet:"Hello, welcome aboard! I'm Ella, one of your cabin crew today. Can I help you find your seat?", greetVi:"Xin chào, chào mừng lên máy bay! Mình là Ella, tiếp viên hôm nay. Mình giúp bạn tìm ghế nhé?",
+  phrases:[["Could I have a blanket, please?","Cho tôi xin cái chăn nhé."],["I'll have the chicken, please.","Cho tôi suất gà."],["My bag doesn't fit in the overhead locker.","Túi tôi không vừa ngăn hành lý."],["Will I make my connecting flight?","Tôi có kịp chuyến nối không?"]],
+  qs:[["For dinner we have chicken with rice or beef pasta. Which would you prefer?","Bữa tối có gà với cơm hoặc mì bò. Bạn chọn món nào?","I'll have the chicken with rice, please."],["Anything to drink with that?","Bạn uống gì kèm không?","Orange juice, please."],["Is there anything else I can get you?","Mình lấy thêm gì cho bạn không?","Could I have a blanket and a pillow?"],["Is everything okay with your seat?","Ghế của bạn ổn chứ?","The screen doesn't work. Could I change seats?"],["We'll be landing in about forty minutes. Do you have a connecting flight?","Khoảng 40 phút nữa hạ cánh. Bạn có chuyến nối không?","Yes, to Hanoi. Will I have enough time?"]],
+  look:{skin:"#F7D6BD", hair:"#3A2620", style:"bun", shirt:"#B0283E", bg:"#F6D5D9", extras:["earrings"]}},
+ /* ---- Cabin crew career ---- */
+ {id:"jack", cat:"crew", name:"Jack", g:"m", acc:"au", age:44, pitch:0.95, vIdx:1,
+  bio:"a senior cabin crew recruiter for an international airline, based in Brisbane.",
+  topic:"Phỏng vấn tiếp viên hàng không", topicEn:"a cabin crew (flight attendant) job interview",
+  mission:"Trả lời phỏng vấn: vì sao muốn làm tiếp viên, 1 tình huống phục vụ khách, và điểm mạnh.", missionEn:"answer interview questions: why you want to be cabin crew, one customer service situation you handled, and your strengths",
+  greet:"G'day and welcome! I'm Jack from the recruitment team. Let's keep this relaxed. So, why do you want to become cabin crew?", greetVi:"Chào và chào mừng! Mình là Jack, đội tuyển dụng. Cứ thoải mái nhé. Vì sao bạn muốn làm tiếp viên hàng không?",
+  phrases:[["I love meeting people from different cultures.","Tôi thích gặp người từ nhiều nền văn hoá."],["Safety always comes first.","An toàn luôn đặt lên hàng đầu."],["I stay calm under pressure.","Tôi giữ bình tĩnh khi áp lực."],["I once helped an upset customer by listening carefully.","Có lần tôi giúp một khách đang bực bằng cách lắng nghe kỹ."]],
+  qs:[["What do you think is the most important part of this job?","Theo bạn điều quan trọng nhất của công việc này là gì?","Passenger safety is the most important part."],["Tell me about a time you dealt with a difficult customer.","Kể về lần bạn xử lý khách khó tính.","A customer was angry about a late order, so I apologised and fixed it quickly."],["How do you handle stress and long working hours?","Bạn đối phó áp lực và giờ làm dài thế nào?","I stay calm, sleep well and exercise regularly."],["How would you work with a team from many countries?","Bạn làm việc với đồng nghiệp nhiều nước thế nào?","I listen, respect differences and communicate clearly."],["Why should we hire you?","Vì sao chúng tôi nên tuyển bạn?","I'm friendly, calm and I love helping people."]],
+  look:{skin:"#EDC4A0", hair:"#A0702E", style:"short", shirt:"#24508C", bg:"#D4E3F6", extras:[]}},
+ {id:"ananya", cat:"crew", name:"Ananya", g:"f", acc:"in", age:33, pitch:1.08, vIdx:1,
+  bio:"a businesswoman from Chennai who flies every week and is a little demanding on flights.",
+  topic:"Làm tiếp viên: phục vụ hành khách", topicEn:"role-play where the learner is the flight attendant and you are a demanding passenger",
+  mission:"Đóng vai tiếp viên: chào khách, xử lý 2 yêu cầu của khách và nhắc 1 quy định an toàn.", missionEn:"play the flight attendant: greet the passenger, handle two of her requests politely, and remind her of one safety rule",
+  greet:"Hello, I'm Ananya. Let's practise! You are the flight attendant and I'm a passenger in seat 12A. Excuse me, I think someone is sitting in my seat.", greetVi:"Chào, mình là Ananya. Luyện nhé! Bạn là tiếp viên, mình là khách ghế 12A. Xin lỗi, hình như có người ngồi ghế của tôi.",
+  phrases:[["May I see your boarding pass, please?","Cho tôi xem thẻ lên máy bay nhé."],["Please fasten your seatbelt.","Quý khách vui lòng thắt dây an toàn."],["I'll be right back with your water.","Tôi mang nước tới ngay."],["I'm sorry, we've run out of that meal. May I offer you another option?","Xin lỗi, suất đó đã hết. Tôi xin gợi ý món khác nhé?"]],
+  qs:[["Thank you. Could I please have some water? I'm very thirsty.","Cảm ơn. Cho tôi xin nước nhé? Tôi khát quá.","Of course, I'll be right back with your water."],["I ordered a vegetarian meal but I didn't get it. What can you do?","Tôi đặt suất chay mà không được. Bạn xử lý sao?","I'm so sorry. Let me check the galley for you right away."],["Can I use the toilet now? The seatbelt sign is on.","Giờ tôi đi vệ sinh được không? Đèn thắt dây đang bật.","I'm sorry, please stay seated until the sign is off, for your safety."],["The baby next to me keeps crying. Can I change seats?","Em bé bên cạnh khóc mãi. Tôi đổi ghế được không?","Let me check if there's a free seat for you."],["Thank you, you were very helpful.","Cảm ơn, bạn giúp nhiều lắm.","You're welcome. It was my pleasure."]],
+  look:{skin:"#B07A52", hair:"#1A1212", style:"ponytail", shirt:"#6A3FA0", bg:"#E6DAF4", extras:["earrings"]}},
+ {id:"ben", cat:"crew", name:"Ben", g:"m", acc:"us", age:50, pitch:0.9, vIdx:2,
+  bio:"a senior purser and cabin crew trainer at an airline training center in Atlanta.",
+  topic:"Phát thanh & an toàn bay", topicEn:"in-flight announcements and safety instructions for cabin crew trainees",
+  mission:"Đọc 1 thông báo trên máy bay (chào mừng hoặc hạ cánh) và giải thích 1 quy định an toàn.", missionEn:"deliver one in-flight announcement (welcome or landing) clearly, then explain one safety instruction",
+  greet:"Hey, welcome to training! I'm Ben, your instructor. Today you'll practice announcements. Ready? Give me a welcome announcement for a flight to Tokyo.", greetVi:"Chào mừng đến buổi huấn luyện! Mình là Ben, giảng viên. Hôm nay bạn luyện phát thanh. Sẵn sàng chưa? Đọc thông báo chào mừng cho chuyến bay đi Tokyo.",
+  phrases:[["Ladies and gentlemen, welcome aboard this flight to Tokyo.","Kính thưa quý khách, chào mừng quý khách lên chuyến bay đi Tokyo."],["Please make sure your seatbelt is fastened.","Quý khách vui lòng kiểm tra đã thắt dây an toàn."],["We will be landing shortly.","Chúng ta sẽ hạ cánh trong ít phút nữa."],["Thank you for flying with us.","Cảm ơn quý khách đã bay cùng chúng tôi."]],
+  qs:[["Good. Now, how would you explain where the emergency exits are?","Tốt. Giờ bạn giải thích lối thoát hiểm ở đâu?","There are six exits: two at the front, two over the wings and two at the back."],["What should passengers do with the oxygen mask?","Hành khách làm gì với mặt nạ dưỡng khí?","Pull the mask down, put it over your nose and mouth, and breathe normally."],["Now give me a short landing announcement.","Giờ đọc thông báo chuẩn bị hạ cánh ngắn.","Ladies and gentlemen, we are starting our descent. Please return to your seats."],["How would you ask passengers to switch off their phones?","Bạn nhắc khách tắt điện thoại thế nào?","Please switch your phone to flight mode now."],["Nice work. Which part felt hardest for you?","Tốt lắm. Phần nào khó nhất với bạn?","The long announcements were the hardest."]],
+  look:{skin:"#C69071", hair:"#2E2420", style:"short", shirt:"#1D3557", bg:"#D7DFEA", extras:["glasses"]}}
+];
+const CATS = [["all","Tất cả chủ đề"],["biz","Kinh doanh & công việc"],["air","Sân bay & máy bay"],["crew","Tiếp viên hàng không"],["life","Đời sống"]];
+const byId = id => CAST.find(c => c.id === id);
+
+/* ================= Storage (safe) ================= */
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem("tc_" + k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem("tc_" + k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem("tc_" + k); }catch(e){} }
+};
+let profile = store.get("profile", null);
+let settings = Object.assign({engine:"auto", geminiKey:"", rate:0.95, showVi:false, recLang:"en-US", autoSpeak:true}, store.get("settings", {}));
+let progress = Object.assign({xp:0, streak:0, lastStreak:null, days:{}, ever:{}}, store.get("progress", {}));
+const saveP = () => store.set("progress", progress);
+const saveS = () => store.set("settings", settings);
+
+/* ================= Helpers ================= */
+const $ = (sel, root=document) => root.querySelector(sel);
+function el(tag, attrs={}, ...kids){
+  const n = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs||{})){
+    if (k === "class") n.className = v;
+    else if (k === "html") n.innerHTML = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) n.append(k.nodeType ? k : document.createTextNode(String(k)));
+  return n;
+}
+function dayKey(d=new Date()){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function yesterdayKey(){ const d=new Date(); d.setDate(d.getDate()-1); return dayKey(d); }
+function hash(s){ let h=0; for (const ch of s) h = (h*31 + ch.charCodeAt(0)) >>> 0; return h; }
+function shade(hex, p){ const n=parseInt(hex.slice(1),16); let r=n>>16,g=n>>8&255,b=n&255; const f=p<0?0:255,t=Math.abs(p)/100; r=Math.round((f-r)*t+r); g=Math.round((f-g)*t+g); b=Math.round((f-b)*t+b); return "#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1); }
+let toastT;
+function toast(msg, ms=2600){ document.querySelectorAll(".toast").forEach(t=>t.remove()); const t=el("div",{class:"toast",role:"status"},msg); document.body.append(t); clearTimeout(toastT); toastT=setTimeout(()=>t.remove(), ms); }
+const ICON = {
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4M8 21h8"/></svg>',
+  stop:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>',
+  kbd:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M9 15.5h6"/></svg>',
+  bulb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>',
+  speaker:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
+  slow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  lang:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h8M8 3v2M6 5c0 4 3 7 6 8M10 5c0 3-3 7-6 8M13 21l4-10 4 10M14.5 17.5h5"/></svg>',
+  repeat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>',
+  fire:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 3.5 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 1-9.5z"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>',
+  reset:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
+  send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>'
+};
+
+/* ================= Character art (original cartoon faces) ================= */
+function avatarSVG(c){
+  const a=c.look, s=a.skin, h=a.hair, hd=shade(h,-25), sd=shade(s,-14);
+  let back="", front="", over="";
+  const cap = `M47 104 Q44 36 100 34 Q156 36 153 104 Q147 72 126 64 Q104 80 70 68 Q52 78 47 104 Z`;
+  switch(a.style){
+    case "long": back=`<path d="M42 104 Q38 32 100 30 Q162 32 158 104 L164 186 Q100 200 36 186 Z" fill="${h}"/>`; front=`<path d="${cap}" fill="${h}"/>`; break;
+    case "bob": back=`<path d="M38 150 L38 100 Q38 28 100 28 Q162 28 162 100 L162 150 Q150 158 138 150 L62 150 Q50 158 38 150 Z" fill="${h}"/>`; front=`<path d="M46 106 Q42 32 100 32 Q158 32 154 106 Q152 80 142 72 L58 72 Q48 80 46 106 Z" fill="${h}"/>`; break;
+    case "bun": back=`<circle cx="100" cy="34" r="22" fill="${h}"/>`; front=`<path d="${cap}" fill="${h}"/>`; break;
+    case "ponytail": back=`<ellipse cx="152" cy="118" rx="15" ry="40" transform="rotate(-14 152 118)" fill="${h}"/>`; front=`<path d="${cap}" fill="${h}"/><circle cx="146" cy="78" r="6" fill="${shade(a.shirt,-10)}"/>`; break;
+    case "curly": front=[[52,92,14],[56,70,16],[70,52,17],[90,42,18],[112,42,18],[132,52,17],[146,70,16],[150,92,13]].map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${h}"/>`).join("")+`<path d="M60 70 Q100 48 140 70 L140 62 Q100 40 60 62 Z" fill="${h}"/>`; break;
+    case "side": front=`<path d="M49 98 Q44 34 100 34 Q156 34 151 98 Q146 66 112 58 Q84 70 62 66 Q52 76 49 98 Z" fill="${h}"/><path d="M112 58 Q100 50 84 44" stroke="${hd}" stroke-width="2" fill="none"/>`; break;
+    default: front=`<path d="M50 94 Q47 38 100 37 Q153 38 150 94 Q146 64 100 60 Q54 64 50 94 Z" fill="${h}"/>`;
+  }
+  const ex=a.extras||[];
+  let beard="", glasses="", ear="";
+  if (ex.includes("beard")) beard=`<path d="M52 112 Q54 172 100 174 Q146 172 148 112 Q140 148 118 148 Q100 140 82 148 Q60 148 52 112 Z" fill="${h}"/>`;
+  if (ex.includes("glasses")) glasses=`<g stroke="${shade(h,-10)}" stroke-width="3" fill="rgba(255,255,255,.18)"><circle cx="80" cy="104" r="13"/><circle cx="120" cy="104" r="13"/></g><path d="M93 103 Q100 99 107 103" stroke="${shade(h,-10)}" stroke-width="3" fill="none"/>`;
+  if (ex.includes("earrings")) ear=`<circle cx="50" cy="122" r="4.5" fill="#E8B830"/><circle cx="150" cy="122" r="4.5" fill="#E8B830"/>`;
+  if (ex.includes("cap")) over+=`<path d="M48 84 Q48 32 100 32 Q152 32 152 84 Z" fill="${a.cap}"/><path d="M44 84 Q100 72 156 84 Q156 94 100 90 Q44 94 44 84 Z" fill="${shade(a.cap,-22)}"/><circle cx="100" cy="34" r="4" fill="${shade(a.cap,-22)}"/>`;
+  if (ex.includes("headband")) over+=`<path d="M50 78 Q100 58 150 78 L150 88 Q100 68 50 88 Z" fill="${a.band}"/>`;
+  const mouthC = shade(s,-55);
+  return `<svg viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <rect width="200" height="210" fill="${a.bg}"/>
+  <circle cx="34" cy="40" r="10" fill="#fff" opacity=".35"/><circle cx="172" cy="56" r="6" fill="#fff" opacity=".35"/>
+  <g class="fig">
+   ${back}
+   <path d="M28 212 Q30 166 100 162 Q170 166 172 212 Z" fill="${a.shirt}"/>
+   <path d="M84 164 L100 184 L116 164" fill="none" stroke="${shade(a.shirt,-22)}" stroke-width="3" stroke-linejoin="round"/>
+   <rect x="88" y="138" width="24" height="30" rx="9" fill="${sd}"/>
+   <g class="head-g">
+    <circle cx="50" cy="106" r="9" fill="${sd}"/><circle cx="150" cy="106" r="9" fill="${sd}"/>
+    ${ear}
+    <ellipse cx="100" cy="102" rx="50" ry="56" fill="${s}"/>
+    ${beard}
+    <circle cx="72" cy="124" r="7" fill="#FF7E7E" opacity=".25"/><circle cx="128" cy="124" r="7" fill="#FF7E7E" opacity=".25"/>
+    <g class="eyes" style="animation-delay:${(hash(c.id)%30)/10}s"><ellipse cx="80" cy="105" rx="5.5" ry="7" fill="#2A2230"/><ellipse cx="120" cy="105" rx="5.5" ry="7" fill="#2A2230"/><circle cx="82" cy="102" r="1.8" fill="#fff"/><circle cx="122" cy="102" r="1.8" fill="#fff"/></g>
+    <path d="M69 91 Q80 85 91 90" stroke="${hd}" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M109 90 Q120 85 131 91" stroke="${hd}" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M100 109 Q95 119 101 121" stroke="${shade(s,-30)}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path class="m-smile" d="M88 133 Q100 143 112 133" stroke="${mouthC}" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+    <ellipse class="m-open" cx="100" cy="136" rx="9" ry="0" fill="${mouthC}"/>
+    ${glasses}
+    ${front}
+    ${over}
+   </g>
+  </g>
+ </svg>`;
+}
+
+/* ================= Voices (text-to-speech) ================= */
+let VOICES = [];
+const synthOK = "speechSynthesis" in window;
+function loadVoices(){ if (!synthOK) return; VOICES = speechSynthesis.getVoices() || []; }
+if (synthOK){ loadVoices(); speechSynthesis.onvoiceschanged = () => { loadVoices(); if (!$("#home").hidden) {} }; }
+const FEM = /female|woman|samantha|karen|zira|aria|jenny|libby|sonia|natasha|neerja|heera|catherine|moira|tessa|veena|kate|serena|\bava\b|allison|susan|hazel|clara|emma|michelle|nancy|sara|elizabeth|maisie|isla|olivia|amy|joanna|kimberly|salli|ivy|kendra|raveena|aditi|kajal|ashley|cora|monica|annette|carly|elsie|freya|\bkim\b|tina|abbi|bella|hollie|\bmia\b|tamsin|google us english|google uk english female|swara|lekha|ananya|martha|fiona|victoria|ellie|nova|shimmer|aarohi/i;
+const MAL = /\bmale\b|david|mark|\bguy\b|ryan|thomas|william|prabhat|ravi|james|daniel|rishi|alex|george|christopher|eric|brian|andrew|liam|roger|steffan|tony|davis|jason|duncan|darren|\bken\b|neil|\btim\b|alfie|elliot|ethan|noah|oliver|kunal|hemant|aaron|fred|ralph|gordon|\blee\b|arthur|ryan|madhur|aarav|google uk english male|rajesh|tom\b/i;
+function vGender(v){ const n=v.name; if (FEM.test(n)) return "f"; if (MAL.test(n)) return "m"; return "?"; }
+function vLang(v){ return (v.lang||"").replace("_","-").toLowerCase(); }
+function candidates(acc, g){
+  const want = ACCENTS[acc].lang.toLowerCase();
+  return VOICES.map(v=>{
+    const L=vLang(v); let s=0;
+    if (L===want) s+=100; else if (L.startsWith("en")) s+=10; else s-=999;
+    const vg=vGender(v); s += vg===g ? 30 : vg==="?" ? 8 : -25;
+    if (/natural|online|neural|premium|enhanced|google/i.test(v.name)) s+=15;
+    if (v.localService===false) s+=2;
+    return {v,s,exact:L===want};
+  }).filter(x=>x.s>-500).sort((a,b)=>b.s-a.s);
+}
+function voiceFor(c){
+  const list = candidates(c.acc, c.g); if (!list.length) return {voice:null, exact:false};
+  const top = list.filter(x=>x.s >= list[0].s - 5);
+  const pick = top[c.vIdx % top.length] || list[0];
+  return {voice:pick.v, exact:pick.exact};
+}
+let mouthTimer = null, speakSafety = null;
+function setTalking(on){
+  const p = $("#puppet");
+  if (p){ p.classList.toggle("talking", on); }
+  const open = p && p.querySelector(".m-open"), smile = p && p.querySelector(".m-smile");
+  clearInterval(mouthTimer);
+  if (on && open){
+    smile.style.opacity = "0";
+    mouthTimer = setInterval(()=>{ open.setAttribute("ry", (Math.random()*8+1.5).toFixed(1)); }, 110);
+  } else if (open){ open.setAttribute("ry","0"); smile.style.opacity = "1"; }
+  if (on) setStatus("talk"); else if (state.status==="talk") setStatus("idle");
+}
+function speak(text, c, opts={}){
+  if (!synthOK || !text) return;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  const u = new SpeechSynthesisUtterance(text);
+  const {voice} = voiceFor(c);
+  if (voice){ u.voice = voice; u.lang = voice.lang; } else u.lang = ACCENTS[c.acc].lang;
+  u.rate = opts.rate || settings.rate; u.pitch = c.pitch;
+  u.onstart = () => setTalking(true);
+  u.onend = u.onerror = () => { clearTimeout(speakSafety); setTalking(false); };
+  clearTimeout(speakSafety);
+  speakSafety = setTimeout(()=>setTalking(false), 2500 + text.length * 95 / (u.rate||1));
+  setTimeout(()=>{ try{ speechSynthesis.speak(u); }catch(e){} }, 60);
+}
+function stopSpeaking(){ if (synthOK) try{ speechSynthesis.cancel(); }catch(e){} setTalking(false); }
+
+/* ================= Speech recognition (microphone) ================= */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let micBlocked = !SR || !!(window.claude && typeof window.claude.use === "function");
+let rec = null;
+function listen({lang, onInterim, onDone, onFail}){
+  if (!SR){ onFail("unsupported"); return null; }
+  const r = new SR();
+  r.lang = lang; r.interimResults = true; r.continuous = false; r.maxAlternatives = 1;
+  let finalText = "", lastInterim = "", failed = false, confs = [];
+  r.onresult = e => { let interim=""; for (let i=e.resultIndex;i<e.results.length;i++){ const t=e.results[i][0].transcript; if (e.results[i].isFinal){ finalText += t + " "; const cf=e.results[i][0].confidence; if (cf>0) confs.push(cf); } else interim += t; } lastInterim = interim; onInterim((finalText+interim).trim()); };
+  r.onerror = e => { failed = true; onFail(e.error || "error"); };
+  r.onend = () => { if (!failed) onDone((finalText || lastInterim).trim(), confs.length ? confs.reduce((a,b)=>a+b,0)/confs.length : null); };
+  try{ r.start(); }catch(e){ onFail("start"); return null; }
+  return r;
+}
+function micErrorText(code){
+  if (code==="not-allowed"||code==="service-not-allowed"||code==="audio-capture"||code==="start"||code==="unsupported")
+    return "Trang này chưa dùng được micro trực tiếp. Hãy bấm biểu tượng micro trên bàn phím điện thoại (hoặc Windows + H trên máy tính) để nói vào ô chữ.";
+  if (code==="no-speech") return "Chưa nghe thấy giọng. Bấm micro và nói lại nhé.";
+  if (code==="network") return "Mất kết nối khi nhận giọng nói. Kiểm tra mạng rồi thử lại.";
+  return "Micro gặp lỗi (" + code + "). Thử lại hoặc gõ chữ.";
+}
+
+/* ================= AI brain ================= */
+let sampleFn = null;
+if (window.claude && typeof window.claude.use === "function"){
+  window.claude.use("sample").then(s => { sampleFn = s; renderEngineNote(); }).catch(()=>{});
+}
+function engineInUse(){
+  if (settings.engine === "offline") return "offline";
+  if (settings.engine === "gemini") return settings.geminiKey ? "gemini" : "offline";
+  if (settings.engine === "claude") return sampleFn ? "claude" : "offline";
+  if (sampleFn) return "claude";
+  if (settings.geminiKey) return "gemini";
+  return "offline";
+}
+const ENGINE_NAME = {claude:"AI Claude", gemini:"AI Gemini", offline:"Kịch bản có sẵn"};
+const LEVELS = {1:"beginner (A2): very simple words, short sentences", 2:"intermediate (B1-B2): everyday natural English", 3:"advanced (C1): natural idioms and richer vocabulary"};
+function rules(c){
+  const A = ACCENTS[c.acc];
+  return `SPEAKING PRACTICE ROLE-PLAY.
+You are ${c.name}, ${c.age}, ${c.bio} You speak ${A.en} English (use ${A.spelling} spelling and a few natural ${A.en} expressions).
+You chat like a warm, curious friend with ${profile.name}, a Vietnamese learner of English, level ${LEVELS[profile.level]}.
+Topic: ${c.topicEn}. The learner's mission: ${c.missionEn}.
+How to talk: 1-3 short spoken sentences (under 40 words), casual and friendly. React to what they said, share a little about yourself, and end with ONE question that moves the mission forward. No emojis, lists or stage directions. Never say you are an AI unless asked.
+The learner's words come from speech recognition: ignore punctuation, capitalization and obvious mis-hearings. If they use Vietnamese or seem stuck, help in very simple English and give them a phrase to use.
+You are ALSO the learner's speaking coach: review the learner's LAST message.
+Reply with ONLY one JSON object, nothing else:
+{"reply":"...","vi":"Vietnamese translation of reply","fixes":[],"better":null,"pron":[],"praise":"...","hint":"one short natural sentence the learner could say next","done":false}
+"fixes": up to 3 items {"wrong":"the learner's exact faulty phrase","right":"corrected phrase","why":"one short sentence in Vietnamese naming the rule"} for real mistakes in grammar, word order, sentence structure, tense, articles, plurals or word choice. Empty array if the sentence is correct.
+"better": a more natural, complete version of the learner's whole sentence as a native speaker would say it, or null if it is already natural.
+"pron": up to 2 items {"word":"English word","tip":"short pronunciation tip in Vietnamese"}. Only when the transcript suggests a likely mispronunciation (an odd or wrong word that sounds like what they probably meant, e.g. "ship" for "sheep", "think" for "sink") or a word Vietnamese speakers often mispronounce that appears in their message (final consonants, -s/-ed endings, th, r/l, v/w, word stress). Empty array otherwise.
+"praise": one short encouraging sentence in Vietnamese about what they did well.
+"done": true only when the learner has clearly completed the whole mission.`;
+}
+function turnsOf(hist){ return hist.filter(m=>m.role==="ai"||m.role==="me").slice(-16).map(m=>({role:m.role==="ai"?"assistant":"user", content:m.text})); }
+function parseLoose(t){
+  if (typeof t !== "string") return t;
+  try{ return JSON.parse(t); }catch(e){}
+  const a=t.indexOf("{"), b=t.lastIndexOf("}");
+  if (a>=0 && b>a){ try{ return JSON.parse(t.slice(a,b+1)); }catch(e){} }
+  return null;
+}
+function cleanResult(j){
+  if (!j || typeof j.reply !== "string" || !j.reply.trim()) throw new Error("bad");
+  const raw = Array.isArray(j.fixes) ? j.fixes : (j.fix ? [j.fix] : []);
+  const fixes = raw.filter(f => f && f.right && f.wrong && String(f.right).trim().toLowerCase() !== String(f.wrong).trim().toLowerCase())
+    .slice(0,3).map(f => ({wrong:String(f.wrong), right:String(f.right), why:String(f.why||"")}));
+  const pron = (Array.isArray(j.pron) ? j.pron : []).filter(p => p && p.word && p.tip).slice(0,2).map(p => ({word:String(p.word), tip:String(p.tip)}));
+  const better = typeof j.better === "string" && j.better.trim() ? j.better.trim() : null;
+  return {reply:j.reply.trim(), vi:String(j.vi||""), review:{fixes, better, pron, praise:String(j.praise||"")}, hint:String(j.hint||""), done:j.done===true};
+}
+async function askClaude(c, hist, signal){
+  const turns = [{role:"user", content: rules(c) + "\n\n(The conversation starts now.)"}, ...turnsOf(hist)];
+  const j = await sampleFn.json(turns, {modelTier:"quick", cache:false, signal});
+  return cleanResult(j);
+}
+async function askGemini(c, hist, signal){
+  const contents = [{role:"user", parts:[{text:"(start)"}]}, ...turnsOf(hist).map(t=>({role:t.role==="assistant"?"model":"user", parts:[{text:t.content}]}))];
+  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
+    method:"POST", signal, headers:{"Content-Type":"application/json","x-goog-api-key":settings.geminiKey},
+    body: JSON.stringify({systemInstruction:{parts:[{text:rules(c)}]}, contents, generationConfig:{responseMimeType:"application/json", temperature:0.9, thinkingConfig:{thinkingBudget:0}}})
+  });
+  if (!res.ok){ const err = new Error("gemini " + res.status); err.status = res.status; throw err; }
+  const data = await res.json();
+  const txt = data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("") || "";
+  return cleanResult(parseLoose(txt));
+}
+const ACKS = [["Nice!","Hay đó!"],["Oh, I see.","À, mình hiểu rồi."],["Cool!","Tuyệt!"],["Got it.","Hiểu rồi."],["Interesting!","Thú vị ghê!"],["Love that.","Thích quá."]];
+function offlineReply(c, hist){
+  const n = hist.filter(m=>m.role==="ai").length - 1;
+  const q = c.qs[((n % c.qs.length) + c.qs.length) % c.qs.length];
+  const ack = ACKS[hash(c.id + n) % ACKS.length];
+  const meCount = hist.filter(m=>m.role==="me").length;
+  return {reply: ack[0] + " " + q[0], vi: ack[1] + " " + q[1], review:null, hint:q[2], done: meCount >= c.qs.length};
+}
+async function askAI(c, hist, signal){
+  const eng = engineInUse();
+  if (eng === "offline") return {...offlineReply(c, hist), engine:"offline"};
+  try{
+    const r = eng === "claude" ? await askClaude(c, hist, signal) : await askGemini(c, hist, signal);
+    return {...r, engine:eng};
+  }catch(e){
+    if (e && (e.code === "cancelled" || e.name === "AbortError")) throw e;
+    let why = "AI đang bận";
+    if (e && e.code === "not_granted") why = "Bạn chưa cho phép dùng AI Claude";
+    else if (e && e.code === "rate_limited") why = "AI Claude đang giới hạn lượt, nghỉ chút rồi thử lại";
+    else if (e && (e.status === 400 || e.status === 403)) why = "Mã Gemini chưa đúng, kiểm tra lại trong Cài đặt";
+    else if (e && e.status === 429) why = "Gemini hết lượt miễn phí tạm thời";
+    toast(why + ". Tạm dùng câu hỏi có sẵn.", 3600);
+    return {...offlineReply(c, hist), engine:"offline"};
+  }
+}
+
+/* ================= Progress, missions, streak ================= */
+function today(){
+  const k = dayKey();
+  if (!progress.days[k]) progress.days[k] = {voice:0, typed:0, chars:{}, topic:0, topicIds:{}, shadow:0, paid:{}};
+  const keys = Object.keys(progress.days).sort(); while (keys.length > 21) delete progress.days[keys.shift()];
+  return progress.days[k];
+}
+function charOfDay(){ return CAST[hash(dayKey()) % CAST.length]; }
+function missions(){
+  const d = today(), cod = charOfDay();
+  return [
+    {id:"voice", t:"Nói 10 câu bằng giọng", cur:d.voice, goal:10},
+    {id:"cod", t:`Trò chuyện 5 lượt với ${cod.name}`, cur:d.chars[cod.id]||0, goal:5},
+    {id:"topic", t:"Hoàn thành nhiệm vụ của 1 chủ đề", cur:d.topic, goal:1},
+    {id:"shadow", t:"Nói lại 3 câu đạt từ 80%", cur:d.shadow, goal:3}
+  ];
+}
+function addXP(n){ progress.xp += n; }
+function checkMissions(){
+  const d = today();
+  for (const m of missions()){
+    if (m.cur >= m.goal && !d.paid[m.id]){ d.paid[m.id] = 1; addXP(30); toast("Xong nhiệm vụ: " + m.t + " (+30 XP)", 3200); }
+  }
+  if (d.voice >= 10 && progress.lastStreak !== dayKey()){
+    progress.streak = progress.lastStreak === yesterdayKey() ? progress.streak + 1 : 1;
+    progress.lastStreak = dayKey();
+  }
+  saveP();
+}
+function streakNow(){ return (progress.lastStreak === dayKey() || progress.lastStreak === yesterdayKey()) ? progress.streak : 0; }
+function levelInfo(){ const lv = Math.floor(progress.xp/250)+1; return {lv, into: progress.xp % 250, need:250}; }
+
+/* ================= Home ================= */
+let filter = "all", filterCat = "all";
+function renderHome(){
+  const h = $("#home"); h.innerHTML = "";
+  const L = levelInfo(), ms = missions(), cod = charOfDay();
+  const w = el("div",{class:"wrap"});
+  w.append(
+    el("header",{class:"topbar"},
+      el("div",{class:"brand"}, el("div",{class:"brand-mark",html:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 11h.01M12 11h.01M15 11h.01"/></svg>'}), el("h1",{},"Talk Club")),
+      el("button",{class:"icon-btn","aria-label":"Cài đặt",html:ICON.gear,onclick:openSettings}))
+  );
+  w.append(el("section",{class:"hello"},
+    el("div",{}, el("h2",{},`Chào ${profile.name}!`), el("p",{},"Hôm nay bạn muốn nói chuyện với ai?")),
+    el("div",{class:"stats"},
+      el("span",{class:"chip fire",html:ICON.fire+`<span>${streakNow()} ngày</span>`,title:"Chuỗi ngày nói đủ 10 câu"}),
+      el("span",{class:"chip",html:ICON.star+`<span>${progress.xp} XP</span>`}))
+  ));
+  const grid = el("div",{class:"home-grid"});
+  const side = el("aside",{class:"side"});
+  const doneCount = ms.filter(m=>m.cur>=m.goal).length;
+  side.append(el("section",{class:"card"},
+    el("h3",{}, "Nhiệm vụ hôm nay", el("span",{class:"chip"}, `${doneCount}/4`)),
+    el("p",{class:"sub"}, "Mỗi nhiệm vụ xong +30 XP. Nói đủ 10 câu để giữ chuỗi ngày."),
+    el("ul",{class:"missions"}, ms.map(m => el("li",{class:"mission"+(m.cur>=m.goal?" done":"")},
+      el("span",{class:"tick",html:m.cur>=m.goal?ICON.check:""}),
+      el("div",{}, el("div",{class:"t"},m.t), el("div",{class:"bar"}, el("i",{style:`width:${Math.min(100,m.cur/m.goal*100)}%`}))),
+      el("span",{class:"n"}, `${Math.min(m.cur,m.goal)}/${m.goal}`))))
+  ));
+  side.append(el("section",{class:"card cod"},
+    el("div",{class:"av",html:avatarSVG(cod)}),
+    el("div",{style:"display:flex;flex-direction:column;gap:6px;min-width:0"},
+      el("span",{class:"eyebrow"},"Bạn của hôm nay"),
+      el("h4",{},cod.name),
+      el("span",{class:`accent acc-${cod.acc}`},"Giọng "+ACCENTS[cod.acc].label),
+      el("button",{class:"btn sm",onclick:()=>openChat(cod.id)},"Nói chuyện ngay"))
+  ));
+  side.append(el("section",{class:"card level"},
+    el("h3",{},`Cấp độ ${L.lv}`, el("span",{class:"chip"},`${L.into}/${L.need} XP`)),
+    el("div",{class:"bar"}, el("i",{style:`width:${L.into/L.need*100}%`})),
+    el("p",{class:"sub",style:"margin:4px 0 0"}, "Nói bằng giọng +10 XP · gõ chữ +5 XP · xong chủ đề +50 XP")
+  ));
+  const main = el("section",{});
+  main.append(el("div",{class:"cast-head"}, el("h3",{},"Chọn chủ đề & bạn nói chuyện"), el("span",{class:"sub",style:"color:var(--muted);font-size:13px"},`${CAST.length} nhân vật · 4 chất giọng`)));
+  const fc = el("div",{class:"filters",role:"group","aria-label":"Lọc theo chủ đề"});
+  CATS.forEach(([k,lbl])=>{ fc.append(el("button",{class:"filter","aria-pressed":String(filterCat===k),onclick:()=>{filterCat=k;renderHome();}},lbl)); });
+  main.append(fc);
+  const fl = el("div",{class:"filters",role:"group","aria-label":"Lọc theo giọng"});
+  [["all","Mọi giọng"],["us","Giọng Mỹ"],["uk","Giọng Anh"],["au","Giọng Úc"],["in","Giọng Ấn Độ"]].forEach(([k,lbl])=>{
+    fl.append(el("button",{class:"filter","aria-pressed":String(filter===k),onclick:()=>{filter=k;renderHome();}},lbl));
+  });
+  main.append(fl);
+  const cast = el("div",{class:"cast"});
+  CAST.filter(c=>(filter==="all"||c.acc===filter)&&(filterCat==="all"||c.cat===filterCat)).forEach(c=>{
+    cast.append(el("button",{class:"person",onclick:()=>openChat(c.id),"aria-label":`Nói chuyện với ${c.name}, chủ đề ${c.topic}`},
+      el("div",{class:"av",html:avatarSVG(c)}),
+      progress.ever[c.id] ? el("span",{class:"done-badge"},"Đã xong") : null,
+      el("span",{class:`accent acc-${c.acc}`},ACCENTS[c.acc].label),
+      el("span",{class:"name"},c.name),
+      el("span",{class:"topic"},c.topic)));
+  });
+  main.append(cast);
+  grid.append(side, main); w.append(grid); h.append(w);
+}
+
+/* ================= Talk room ================= */
+const state = {c:null, hist:[], busy:false, status:"idle", ctl:null, typing:false};
+function histKey(id){ return "chat_" + id; }
+function saveHist(){ store.set(histKey(state.c.id), state.hist.slice(-40)); }
+function setStatus(s){
+  state.status = s;
+  const st = $("#status"); if (!st) return;
+  const map = {idle:["", "Sẵn sàng nghe bạn"], listen:["on","Đang nghe bạn nói..."], think:["", `${state.c.name} đang nghĩ...`], talk:["talk",`${state.c.name} đang nói`]};
+  st.className = "status " + map[s][0]; st.lastChild.textContent = map[s][1];
+  $("#puppet")?.classList.toggle("listening", s==="listen");
+}
+function openChat(id){
+  const c = byId(id); if (!c) return;
+  state.c = c; state.hist = store.get(histKey(id), []);
+  state.typing = micBlocked;
+  if (!state.hist.length) state.hist.push({role:"ai", text:c.greet, vi:c.greetVi, hint:c.phrases[0][0]});
+  $("#home").hidden = true; const v = $("#chat"); v.hidden = false;
+  renderChat();
+  const last = state.hist[state.hist.length-1];
+  if (settings.autoSpeak && last.role === "ai") speak(last.text, c);
+}
+function closeChat(){
+  stopSpeaking(); if (rec) try{ rec.abort(); }catch(e){} rec = null;
+  state.ctl?.abort(); state.busy = false;
+  $("#chat").hidden = true; $("#home").hidden = false; renderHome(); window.scrollTo(0,0);
+}
+function renderEngineNote(){ const n = $("#engine-note"); if (n && state.c) n.textContent = ENGINE_NAME[engineInUse()]; }
+function renderChat(){
+  const c = state.c, v = $("#chat"); v.innerHTML = "";
+  const missionDone = !!(today().topicIds[c.id]);
+  const {exact} = voiceFor(c);
+  v.append(el("div",{class:"chat-top wrap",style:"max-width:none"},
+    el("button",{class:"icon-btn","aria-label":"Quay lại",html:ICON.back,onclick:closeChat}),
+    el("div",{class:"who"}, el("b",{},c.name), el("span",{}, `Giọng ${ACCENTS[c.acc].label}${exact?"":" (máy chưa có, đang dùng giọng thay thế)"} · ${c.topic} · `, el("span",{id:"engine-note"}, ENGINE_NAME[engineInUse()]))),
+    el("button",{class:"icon-btn","aria-label":"Bắt đầu lại cuộc trò chuyện",title:"Bắt đầu lại",html:ICON.reset,onclick:restartChat}),
+    el("button",{class:"icon-btn","aria-label":"Cài đặt",html:ICON.gear,onclick:openSettings})
+  ));
+  const room = el("div",{class:"room"});
+  const stage = el("section",{class:"stage"},
+    el("div",{class:"puppet",id:"puppet"}, el("div",{class:"av",html:avatarSVG(c)})),
+    el("div",{class:"stage-info"},
+      el("span",{class:"status",id:"status"}, el("i"), el("span",{},"Sẵn sàng nghe bạn")),
+      el("div",{class:"mission-box"+(missionDone?" done":"")}, el("b",{}, missionDone ? "Đã hoàn thành nhiệm vụ" : "Nhiệm vụ"), c.mission),
+      el("div",{class:"phrases"}, el("h5",{},"Mẫu câu hay dùng (bấm để nghe)"),
+        c.phrases.map(([en,vi]) => el("button",{class:"phrase",onclick:()=>speak(en,c)}, en, el("small",{},vi))))
+    ));
+  const col = el("section",{class:"talk-col"});
+  const log = el("div",{class:"log",id:"log","aria-live":"polite"});
+  col.append(log);
+  const controls = el("div",{class:"controls"});
+  controls.append(el("div",{class:"live",id:"live"}, micBlocked ? "" : "Bấm micro rồi nói tiếng Anh"));
+  controls.append(el("div",{class:"ctl-row"},
+    el("button",{class:"side-btn",onclick:showHint,html:ICON.bulb+"<span>Gợi ý</span>"}),
+    el("button",{class:"mic",id:"mic","aria-label":"Bấm để nói",html:ICON.mic,onclick:toggleMic}),
+    el("button",{class:"side-btn",onclick:()=>{state.typing=!state.typing;renderTypeRow(true);},html:ICON.kbd+"<span>Gõ chữ</span>"})
+  ));
+  controls.append(el("div",{id:"typebox"}));
+  col.append(controls);
+  room.append(stage, col); v.append(room);
+  state.hist.forEach((m,i)=>log.append(renderMsg(m,i)));
+  renderTypeRow(false);
+  scrollLog();
+}
+function renderTypeRow(focus){
+  const box = $("#typebox"); if (!box) return; box.innerHTML = "";
+  if (!state.typing) return;
+  const inp = el("input",{type:"text",id:"say-input",placeholder:"Nhập hoặc đọc câu tiếng Anh...",autocomplete:"off",enterkeyhint:"send","aria-label":"Câu trả lời của bạn"});
+  const form = el("form",{class:"type-row",onsubmit:e=>{e.preventDefault(); const t=inp.value.trim(); if(!t) return; inp.value=""; sendUser(t, false);}},
+    inp, el("button",{class:"btn",type:"submit","aria-label":"Gửi",html:ICON.send}));
+  box.append(form);
+  if (micBlocked) box.append(el("p",{class:"tip",html:"Muốn nói thay vì gõ: bấm biểu tượng micro trên bàn phím điện thoại, hoặc <kbd>Windows</kbd> + <kbd>H</kbd> trên máy tính."}));
+  if (focus) inp.focus();
+}
+function scrollLog(){ const l=$("#log"); if (l) requestAnimationFrame(()=>{ l.scrollTop = l.scrollHeight; }); }
+function renderMsg(m, i){
+  const c = state.c;
+  if (m.role === "sys") return el("div",{class:"sys"}, m.text);
+  if (m.role === "me"){
+    const wrap = el("div",{class:"msg me"}, el("div",{class:"bubble"}, m.text));
+    const card = reviewCard(m);
+    if (card) wrap.append(card);
+    return wrap;
+  }
+  const viBox = el("div",{class:"vi"}, m.vi||""); viBox.hidden = !(settings.showVi && m.vi);
+  return el("div",{class:"msg ai"},
+    el("div",{class:"bubble"}, m.text), viBox,
+    el("div",{class:"tools"},
+      el("button",{class:"tool",html:ICON.speaker+"Nghe lại",onclick:()=>speak(m.text,c)}),
+      el("button",{class:"tool",html:ICON.slow+"Chậm",onclick:()=>speak(m.text,c,{rate:0.7})}),
+      m.vi ? el("button",{class:"tool",html:ICON.lang+"Dịch",onclick:()=>{viBox.hidden=!viBox.hidden;}}) : null,
+      el("button",{class:"tool",html:ICON.repeat+"Nói lại",onclick:()=>openShadow(m.text)})));
+}
+function reviewCard(m){
+  const c = state.c, rv = m.review, hasConf = typeof m.conf === "number";
+  if (!rv && !hasConf) return null;
+  const card = el("div",{class:"review"});
+  const chips = el("div",{class:"rv-chips"});
+  if (hasConf){
+    const p = Math.round(m.conf*100), cls = p>=85?"good":p>=65?"mid":"low";
+    chips.append(el("span",{class:"rv-chip "+cls,title:"Máy nghe rõ câu của bạn đến mức nào"}, "Độ rõ phát âm ", el("b",{},p+"%")));
+  }
+  if (rv){
+    const n = rv.fixes.length;
+    chips.append(el("span",{class:"rv-chip "+(n?"mid":"good")}, n ? `Ngữ pháp: ${n} lỗi` : "Ngữ pháp: chuẩn"));
+    if (rv.pron.length) chips.append(el("span",{class:"rv-chip mid"}, `Phát âm: ${rv.pron.length} từ cần chú ý`));
+  }
+  card.append(el("div",{class:"rv-head"}, el("b",{},"Nhận xét"), chips));
+  if (rv){
+    rv.fixes.forEach(f => card.append(el("div",{class:"rv-item"},
+      el("div",{}, el("span",{class:"w"},f.wrong), " → ", el("span",{class:"r"},f.right)),
+      f.why ? el("p",{},f.why) : null)));
+    rv.pron.forEach(p => card.append(el("div",{class:"rv-item pron"},
+      el("div",{class:"rv-word"}, el("b",{},p.word), el("button",{class:"tool",html:ICON.slow+"Nghe chậm",onclick:()=>speak(p.word,c,{rate:0.6})}), el("button",{class:"tool",html:ICON.repeat+"Tập",onclick:()=>openShadow(p.word)})),
+      el("p",{},p.tip))));
+    if (rv.better) card.append(el("div",{class:"rv-item better"},
+      el("small",{},"Cách nói tự nhiên hơn"), el("div",{class:"r"},rv.better),
+      el("div",{class:"tools",style:"margin-top:6px"}, el("button",{class:"tool",html:ICON.speaker+"Nghe",onclick:()=>speak(rv.better,c)}), el("button",{class:"tool",html:ICON.repeat+"Luyện câu này",onclick:()=>openShadow(rv.better)}))));
+    if (rv.praise) card.append(el("p",{class:"rv-praise"}, rv.praise));
+  } else {
+    card.append(el("p",{class:"help"},"Chế độ kịch bản chỉ chấm độ rõ. Bật AI trong Cài đặt để được sửa ngữ pháp và phát âm."));
+  }
+  if (hasConf && m.conf < 0.65) card.append(el("p",{class:"help"},"Máy nghe chưa rõ. Thử nói chậm hơn, phát âm rõ phụ âm cuối (như -s, -t, -d)."));
+  return card;
+}
+function appendMsg(m){ state.hist.push(m); $("#log")?.append(renderMsg(m, state.hist.length-1)); scrollLog(); }
+function restartChat(){
+  stopSpeaking(); state.ctl?.abort(); state.busy=false;
+  state.hist = [{role:"ai", text:state.c.greet, vi:state.c.greetVi, hint:state.c.phrases[0][0]}];
+  saveHist(); renderChat(); speak(state.c.greet, state.c);
+}
+function showHint(){
+  const last = [...state.hist].reverse().find(m=>m.role==="ai");
+  const hint = last && last.hint ? last.hint : state.c.phrases[0][0];
+  const live = $("#live"); live.textContent = "Bạn có thể nói: “" + hint + "”";
+  speak(hint, state.c, {rate:0.85});
+}
+function useKeyboardMic(){
+  state.typing = true; renderTypeRow(true);
+  const live = $("#live"); if (live) live.textContent = "Chạm nút micro trên bàn phím vừa hiện ra để nói (máy tính: Windows + H), rồi bấm Gửi.";
+}
+function toggleMic(){
+  if (state.busy) return;
+  if (rec){ try{ rec.stop(); }catch(e){} return; }
+  stopSpeaking();
+  if (micBlocked){ useKeyboardMic(); return; }
+  const mic = $("#mic"), live = $("#live");
+  const lang = settings.recLang === "char" ? ACCENTS[state.c.acc].lang : settings.recLang;
+  mic.classList.add("rec"); mic.innerHTML = ICON.stop; mic.setAttribute("aria-label","Dừng"); setStatus("listen"); live.textContent = "Đang nghe...";
+  const reset = () => { rec = null; mic.classList.remove("rec"); mic.innerHTML = ICON.mic; mic.setAttribute("aria-label","Bấm để nói"); if (state.status==="listen") setStatus("idle"); };
+  rec = listen({lang,
+    onInterim: t => { live.textContent = t; },
+    onDone: (t, conf) => { reset(); if (t) { live.textContent = ""; sendUser(t, true, conf); } else live.textContent = "Chưa nghe thấy giọng. Bấm micro và nói lại nhé."; },
+    onFail: code => { reset(); const msg = micErrorText(code); live.textContent = msg;
+      if (["not-allowed","service-not-allowed","audio-capture","start","unsupported"].includes(code)){ micBlocked = true; useKeyboardMic(); } }
+  });
+}
+async function sendUser(text, viaVoice, conf){
+  if (state.busy) return;
+  const c = state.c, d = today();
+  const me = {role:"me", text};
+  if (viaVoice && typeof conf === "number") me.conf = conf;
+  appendMsg(me);
+  if (viaVoice){ d.voice++; addXP(10); } else { d.typed++; addXP(5); }
+  d.chars[c.id] = (d.chars[c.id]||0) + 1;
+  state.busy = true; setStatus("think");
+  const typing = el("div",{class:"msg ai"}, el("div",{class:"bubble typing"}, el("i"),el("i"),el("i")));
+  $("#log").append(typing); scrollLog();
+  state.ctl = new AbortController();
+  let r;
+  try{ r = await askAI(c, state.hist, state.ctl.signal); }
+  catch(e){ typing.remove(); state.busy=false; setStatus("idle"); return; }
+  typing.remove();
+  if (state.c !== c || $("#chat").hidden) { state.busy=false; return; }
+  if (r.review || me.conf != null){ if (r.review) me.review = r.review; const nodes = $("#log").querySelectorAll(".msg.me"); const last = nodes[nodes.length-1]; if (last) last.replaceWith(renderMsg(me)); }
+  appendMsg({role:"ai", text:r.reply, vi:r.vi, hint:r.hint});
+  if (r.done && !d.topicIds[c.id]){
+    d.topicIds[c.id] = 1; d.topic++; progress.ever[c.id] = 1; addXP(50);
+    appendMsg({role:"sys", text:`Hoàn thành nhiệm vụ chủ đề với ${c.name}! +50 XP`});
+    const mb = $(".mission-box"); if (mb){ mb.classList.add("done"); mb.firstChild.textContent = "Đã hoàn thành nhiệm vụ"; }
+  }
+  saveHist(); checkMissions();
+  state.busy = false; setStatus("idle");
+  speak(r.reply, c);
+}
+
+/* ================= Shadowing (repeat after the character) ================= */
+function words(s){ return s.toLowerCase().replace(/[’']/g,"'").replace(/[^a-z0-9' ]+/g," ").split(/\s+/).filter(Boolean); }
+function compare(target, said){
+  const t = words(target), s = words(said), n=t.length, m=s.length;
+  const dp = Array.from({length:n+1},()=>new Array(m+1).fill(0));
+  for (let i=n-1;i>=0;i--) for (let j=m-1;j>=0;j--) dp[i][j] = t[i]===s[j] ? dp[i+1][j+1]+1 : Math.max(dp[i+1][j], dp[i][j+1]);
+  const hit = new Array(n).fill(false); let i=0,j=0;
+  while (i<n && j<m){ if (t[i]===s[j]){ hit[i]=true; i++; j++; } else if (dp[i+1][j] >= dp[i][j+1]) i++; else j++; }
+  return {pct: n ? Math.round(dp[0][0]/n*100) : 0, t, hit};
+}
+function openShadow(target){
+  stopSpeaking();
+  const c = state.c, root = $("#modal-root");
+  const tgt = el("div",{class:"target"}, target);
+  const result = el("div",{});
+  const live = el("div",{class:"live"}, micBlocked ? "" : "Bấm micro và đọc to câu trên");
+  let r2 = null;
+  const close = () => { if (r2) try{ r2.abort(); }catch(e){} stopSpeaking(); root.innerHTML = ""; };
+  const grade = said => {
+    const {pct, t, hit} = compare(target, said);
+    tgt.innerHTML = ""; t.forEach((w,k)=>{ tgt.append(el("span",{class:hit[k]?"hit":"miss"}, w), " "); });
+    result.innerHTML = "";
+    result.append(el("div",{style:"display:flex;align-items:center;gap:14px"},
+      el("div",{class:"score",style:`color:${pct>=80?"var(--good)":pct>=50?"var(--warn)":"var(--bad)"}`}, pct+"%"),
+      el("div",{}, el("b",{}, pct>=80?"Rất tốt!":pct>=50?"Khá ổn, thử lại nhé":"Nghe lại rồi thử nhé"), el("div",{class:"help"},"Bạn nói: “"+said+"”"))));
+    if (pct >= 80){ const d = today(); d.shadow++; addXP(15); checkMissions(); }
+  };
+  const micBtn = el("button",{class:"mic","aria-label":"Bấm để đọc",html:ICON.mic});
+  micBtn.onclick = () => {
+    if (r2){ try{ r2.stop(); }catch(e){} return; }
+    stopSpeaking();
+    if (micBlocked){ typeForm.hidden = false; tin.focus(); live.textContent = "Chạm micro trên bàn phím để đọc, rồi bấm Chấm."; return; }
+    micBtn.classList.add("rec"); micBtn.innerHTML = ICON.stop; live.textContent = "Đang nghe...";
+    const done = () => { r2 = null; micBtn.classList.remove("rec"); micBtn.innerHTML = ICON.mic; };
+    r2 = listen({lang: settings.recLang==="char" ? ACCENTS[c.acc].lang : settings.recLang,
+      onInterim: t => live.textContent = t,
+      onDone: t => { done(); live.textContent = ""; if (t) grade(t); else live.textContent = "Chưa nghe thấy giọng, thử lại nhé."; },
+      onFail: code => { done(); live.textContent = micErrorText(code); if (["not-allowed","service-not-allowed","audio-capture","start","unsupported"].includes(code)){ micBlocked = true; typeForm.hidden = false; tin.focus(); } }});
+  };
+  const tin = el("input",{type:"text",id:"shadow-input",placeholder:"Đọc bằng micro bàn phím hoặc gõ lại câu",autocomplete:"off"});
+  const typeForm = el("form",{class:"type-row",onsubmit:e=>{e.preventDefault(); if (tin.value.trim()) grade(tin.value.trim());}}, tin, el("button",{class:"btn",type:"submit"},"Chấm"));
+  typeForm.hidden = !micBlocked;
+  const ov = el("div",{class:"overlay",onclick:e=>{ if (e.target===ov) close(); }},
+    el("div",{class:"sheet",role:"dialog","aria-modal":"true","aria-label":"Luyện nói lại"},
+      el("h2",{},"Nói lại theo " + c.name),
+      el("p",{class:"help"},"Nghe câu mẫu, rồi đọc to. Từ đúng hiện màu xanh, từ thiếu hoặc sai hiện màu đỏ. Đạt từ 80% được +15 XP."),
+      tgt,
+      el("div",{class:"tools"}, el("button",{class:"tool",html:ICON.speaker+"Nghe mẫu",onclick:()=>speak(target,c)}), el("button",{class:"tool",html:ICON.slow+"Nghe chậm",onclick:()=>speak(target,c,{rate:0.65})})),
+      el("div",{style:"display:grid;place-items:center;gap:8px"}, micBtn, live),
+      typeForm,
+      micBlocked ? el("p",{class:"tip",html:"Bấm micro trên bàn phím điện thoại, hoặc <kbd>Windows</kbd> + <kbd>H</kbd> trên máy tính, để đọc vào ô."}) : null,
+      result,
+      el("div",{class:"sheet-actions"}, el("button",{class:"btn ghost",onclick:close},"Đóng"))));
+  root.innerHTML = ""; root.append(ov);
+  speak(target, c);
+}
+
+/* ================= Settings ================= */
+function radioSeg(name, opts, val){
+  return el("div",{class:"seg"}, opts.map(([v,lbl,sub]) => el("label",{}, el("input",{type:"radio",name,value:v,checked:String(val)===String(v)}), lbl, sub?el("small",{},sub):null)));
+}
+function openSettings(){
+  stopSpeaking();
+  const root = $("#modal-root");
+  const nameI = el("input",{type:"text",id:"set-name",value:profile.name,maxlength:"30"});
+  const keyI = el("input",{type:"password",id:"set-key",value:settings.geminiKey,placeholder:"Dán mã API Gemini (không bắt buộc)",autocomplete:"off"});
+  const rateI = el("input",{type:"range",id:"set-rate",min:"0.6",max:"1.2",step:"0.05",value:String(settings.rate)});
+  const rateOut = el("span",{class:"chip"}, Math.round(settings.rate*100)+"%");
+  rateI.oninput = () => rateOut.textContent = Math.round(rateI.value*100)+"%";
+  const recSel = el("select",{id:"set-rec"},
+    [["en-US","Tiếng Anh Mỹ (khuyên dùng)"],["en-GB","Tiếng Anh Anh"],["char","Theo giọng nhân vật"]].map(([v,l])=>el("option",{value:v,selected:settings.recLang===v},l)));
+  const viI = el("input",{type:"checkbox",id:"set-vi",checked:settings.showVi});
+  const voicesBox = el("div",{class:"voices"});
+  const fillVoices = () => {
+    loadVoices(); voicesBox.innerHTML = "";
+    Object.entries(ACCENTS).forEach(([k,A])=>{
+      ["f","m"].forEach(g=>{
+        const c = CAST.find(x=>x.acc===k && x.g===g) || CAST.find(x=>x.acc===k);
+        const {voice, exact} = voiceFor(c);
+        voicesBox.append(el("div",{class:"vrow"},
+          el("span",{class:`accent acc-${k}`}, A.label),
+          el("span",{class:"vn"}, el("b",{}, c.name+": "), voice ? voice.name : "Không có giọng", exact ? "" : el("span",{class:"miss"}," (thiếu giọng "+A.label+")")),
+          el("button",{class:"tool",html:ICON.speaker+"Thử",onclick:()=>speak(`Hi, I'm ${c.name}. Nice to meet you!`, c)})));
+      });
+    });
+  };
+  fillVoices();
+  const engSeg = radioSeg("eng", [["auto","Tự động","Claude nếu có, rồi Gemini"],["claude","AI Claude","Khi mở trong Claude"],["gemini","AI Gemini","Cần mã API miễn phí"],["offline","Kịch bản","Không cần mạng AI"]], settings.engine);
+  const lvSeg = radioSeg("lv", [[1,"Mới bắt đầu","Câu ngắn, từ dễ"],[2,"Trung cấp","Giao tiếp tự nhiên"],[3,"Khá","Thành ngữ, từ hay"]], profile.level);
+  const confirmRow = el("div",{class:"sheet-actions",hidden:true},
+    el("span",{class:"help",style:"flex:1"},"Xoá hết XP, chuỗi ngày và lịch sử trò chuyện?"),
+    el("button",{class:"btn ghost sm",onclick:()=>{confirmRow.hidden=true;}},"Huỷ"),
+    el("button",{class:"btn sm",style:"background:var(--bad);color:#fff",onclick:()=>{ CAST.forEach(c=>store.del(histKey(c.id))); progress={xp:0,streak:0,lastStreak:null,days:{},ever:{}}; saveP(); close(); toast("Đã xoá tiến độ."); }},"Xoá"));
+  const close = () => { root.innerHTML = ""; stopSpeaking(); if (!$("#chat").hidden && state.c) renderChat(); else renderHome(); };
+  const save = () => {
+    profile.name = nameI.value.trim() || profile.name;
+    profile.level = Number((ov.querySelector('input[name="lv"]:checked')||{}).value || profile.level);
+    settings.engine = (ov.querySelector('input[name="eng"]:checked')||{}).value || "auto";
+    settings.geminiKey = keyI.value.trim(); settings.rate = Number(rateI.value); settings.recLang = recSel.value; settings.showVi = viI.checked;
+    store.set("profile", profile); saveS(); toast("Đã lưu cài đặt."); close();
+  };
+  const ov = el("div",{class:"overlay",onclick:e=>{ if (e.target===ov) close(); }},
+    el("div",{class:"sheet",role:"dialog","aria-modal":"true","aria-label":"Cài đặt"},
+      el("h2",{},"Cài đặt"),
+      el("div",{class:"row"}, el("label",{class:"lbl",for:"set-name"},"Tên của bạn"), nameI),
+      el("div",{class:"row"}, el("span",{class:"lbl"},"Trình độ"), lvSeg),
+      el("div",{class:"row"}, el("span",{class:"lbl"},"Bộ não AI của nhân vật"), engSeg,
+        el("p",{class:"help"}, "Đang dùng: ", el("b",{}, ENGINE_NAME[engineInUse()]), ". Mở trong Claude thì AI Claude chạy sẵn, không cần mã. Mở bằng đường link riêng thì dán mã Gemini miễn phí (lấy tại aistudio.google.com/apikey).")),
+      el("div",{class:"row"}, el("label",{class:"lbl",for:"set-key"},"Mã API Gemini"), keyI, el("p",{class:"help"},"Mã chỉ lưu trên máy này, không gửi đi đâu ngoài Google.")),
+      el("div",{class:"row"}, el("label",{class:"lbl",for:"set-rate"},"Tốc độ nói của nhân vật ", rateOut), rateI),
+      el("div",{class:"row"}, el("label",{class:"lbl",for:"set-rec"},"Nhận diện giọng của bạn theo"), recSel),
+      el("label",{style:"display:flex;gap:10px;align-items:center;font-weight:600"}, viI, "Luôn hiện bản dịch tiếng Việt"),
+      el("div",{class:"row"}, el("span",{class:"lbl"},"Giọng có trên máy này"), voicesBox,
+        el("p",{class:"help"},"Trên máy tính, trình duyệt Microsoft Edge có đủ cả 4 giọng Mỹ, Anh, Úc, Ấn Độ. Trên điện thoại Android, cài thêm giọng tiếng Anh trong Cài đặt > Chuyển văn bản thành lời nói nếu thấy báo thiếu.")),
+      confirmRow,
+      el("div",{class:"sheet-actions"},
+        el("button",{class:"btn ghost sm",style:"margin-right:auto",onclick:()=>{confirmRow.hidden=false;}},"Xoá tiến độ"),
+        el("button",{class:"btn ghost",onclick:close},"Đóng"),
+        el("button",{class:"btn",onclick:save},"Lưu"))));
+  root.innerHTML = ""; root.append(ov);
+  if (synthOK && !VOICES.length) setTimeout(fillVoices, 600);
+}
+
+/* ================= Onboarding ================= */
+function openOnboarding(){
+  const root = $("#modal-root");
+  const nameI = el("input",{type:"text",id:"ob-name",value:"",placeholder:"Ví dụ: Minh",maxlength:"30"});
+  const lvSeg = radioSeg("oblv", [[1,"Mới bắt đầu","Câu ngắn, từ dễ"],[2,"Trung cấp","Giao tiếp tự nhiên"],[3,"Khá","Thành ngữ, từ hay"]], 2);
+  const ov = el("div",{class:"overlay"},
+    el("div",{class:"sheet",role:"dialog","aria-modal":"true","aria-label":"Bắt đầu"},
+      el("div",{style:"display:flex;gap:8px"}, ...["emma","harry","chloe","arjun"].map(id=>el("div",{class:"av",style:"width:64px;height:64px;border-radius:18px;overflow:hidden",html:avatarSVG(byId(id))}))),
+      el("h2",{},"Chào mừng tới Talk Club"),
+      el("p",{class:"help",style:"font-size:14px"},`${CAST.length} người bạn nói giọng Mỹ, Anh, Úc, Ấn Độ đang chờ trò chuyện với bạn. Mỗi ngày nói đủ 10 câu để giữ chuỗi ngày nhé.`),
+      el("div",{class:"row"}, el("label",{class:"lbl",for:"ob-name"},"Các bạn nên gọi bạn là gì?"), nameI),
+      el("div",{class:"row"}, el("span",{class:"lbl"},"Trình độ hiện tại"), lvSeg),
+      el("div",{class:"sheet-actions"}, el("button",{class:"btn",onclick:()=>{
+        profile = {name: nameI.value.trim()||"Friend", level: Number((ov.querySelector('input[name="oblv"]:checked')||{}).value||2)};
+        store.set("profile", profile); root.innerHTML = ""; renderHome();
+      }},"Bắt đầu"))));
+  root.append(ov);
+}
+
+/* ================= Boot ================= */
+if (!profile){ profile = {name:"Friend", level:2}; renderHome(); openOnboarding(); }
+else renderHome();
+</script>
+
+</html>
