@@ -8,27 +8,20 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: app shell — home (missions + cast grid) and a talk room (animated character stage + chat + big mic). */
+/* Single bright "garden" theme by choice: always light, fresh greens, sunny yellow, coral and blossom pink. */
 :root{
-  --bg:#EEF3F1; --surface:#FFFFFF; --surface-2:#F6F9F8; --ink:#1C2A33; --muted:#5B6A73; --line:#D8E2DE;
-  --accent:#FF6B3D; --accent-ink:#FFFFFF; --teal:#1F8A7D; --teal-soft:#D7EEEA; --warn:#C9551F; --good:#23915F; --good-soft:#DDF2E6; --bad:#C23B4A;
-  --us:#3466D6; --uk:#B8364A; --au:#D28F0E; --in:#20925A;
-  --bubble-ai:#FFFFFF; --bubble-me:#1F8A7D; --bubble-me-ink:#FFFFFF;
-  --shadow:0 6px 24px rgba(28,42,51,.08);
+  --bg:#F3FBF4; --bg-2:#E6F6FF; --surface:#FFFFFF; --surface-2:#F5FBF3; --ink:#1E3328; --muted:#587062; --line:#D3EBD7;
+  --accent:#FF6B4A; --accent-ink:#FFFFFF; --teal:#2E9C5E; --teal-soft:#DDF4E3; --warn:#D9731A; --good:#2E9C5E; --good-soft:#E0F5E6; --bad:#D63F57;
+  --leaf:#4CB86B; --leaf-2:#2F8F4E; --leaf-3:#9BD77E; --sun:#FFC93C; --petal:#FF8FB1; --petal-2:#FFB4CB; --sky:#7CC8F2;
+  --us:#2F6BE0; --uk:#D23A5C; --au:#E39A00; --in:#22A35E;
+  --bubble-ai:#FFFFFF; --bubble-me:#2E9C5E; --bubble-me-ink:#FFFFFF;
+  --shadow:0 8px 24px rgba(46,120,70,.12);
   --f-display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
   --f-body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0F171B; --surface:#172228; --surface-2:#1C2930; --ink:#E6EEF0; --muted:#9AABB3; --line:#2A3A42;
-  --accent:#FF7F55; --accent-ink:#1A0E08; --teal:#45B5A6; --teal-soft:#183A36; --warn:#F08A55; --good:#4CC48A; --good-soft:#163628; --bad:#F06B7A;
-  --us:#6F95F0; --uk:#E26A7E; --au:#F0B43C; --in:#4CC48A;
-  --bubble-ai:#1E2C33; --bubble-me:#2A7F74; --bubble-me-ink:#F2FFFC; --shadow:0 6px 24px rgba(0,0,0,.35); color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0F171B; --surface:#172228; --surface-2:#1C2930; --ink:#E6EEF0; --muted:#9AABB3; --line:#2A3A42;
-  --accent:#FF7F55; --accent-ink:#1A0E08; --teal:#45B5A6; --teal-soft:#183A36; --warn:#F08A55; --good:#4CC48A; --good-soft:#163628; --bad:#F06B7A;
-  --us:#6F95F0; --uk:#E26A7E; --au:#F0B43C; --in:#4CC48A;
-  --bubble-ai:#1E2C33; --bubble-me:#2A7F74; --bubble-me-ink:#F2FFFC; --shadow:0 6px 24px rgba(0,0,0,.35); color-scheme:dark}
 html,body{height:100%}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+body{background:linear-gradient(180deg,var(--bg-2) 0%,var(--bg) 340px) fixed,var(--bg);background-color:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
 *{box-sizing:border-box}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -53,12 +46,12 @@ h1,h2,h3{font-family:var(--f-display);line-height:1.15;margin:0;text-wrap:balanc
 .home-grid{display:grid;grid-template-columns:1fr;gap:16px;padding-bottom:40px}
 @media(min-width:900px){.home-grid{grid-template-columns:360px 1fr;align-items:start}.side{position:sticky;top:16px}}
 .side{display:flex;flex-direction:column;gap:16px;min-width:0}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:16px;box-shadow:var(--shadow)}
 .card h3{font-size:19px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .card .sub{color:var(--muted);font-size:13px;margin:2px 0 10px}
 .level{display:flex;flex-direction:column;gap:6px}
 .bar{height:8px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
-.bar>i{display:block;height:100%;background:var(--teal);border-radius:99px;transition:width .5s}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--leaf-2),var(--leaf-3));border-radius:99px;transition:width .5s}
 .missions{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
 .mission{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center}
 .mission .tick{width:28px;height:28px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center}
@@ -101,7 +94,7 @@ h1,h2,h3{font-family:var(--f-display);line-height:1.15;margin:0;text-wrap:balanc
 .chat-top .who span{font-size:12px;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .room{flex:1;min-height:0;display:grid;grid-template-rows:auto 1fr;max-width:1080px;width:100%;margin:0 auto}
 @media(min-width:900px){.room{grid-template-columns:380px 1fr;grid-template-rows:1fr;gap:20px;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}}
-.stage{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));background:var(--surface-2);border-bottom:1px solid var(--line);min-width:0}
+.stage{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));background:linear-gradient(180deg,#EAF7FF,#F1FBEF);border-bottom:1px solid var(--line);min-width:0}
 @media(min-width:900px){.stage{grid-template-columns:1fr;align-content:start;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:20px;overflow:auto}}
 .puppet{position:relative;width:120px;aspect-ratio:1;max-width:100%}
 @media(min-width:900px){.puppet{width:min(300px,100%);margin:0 auto}}
@@ -215,10 +208,31 @@ h1,h2,h3{font-family:var(--f-display);line-height:1.15;margin:0;text-wrap:balanc
 .puppet.listening .head-g{transform:rotate(-4deg);transform-box:view-box;transform-origin:100px 150px;transition:transform .3s}
 .head-g{transition:transform .3s}
 @keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
+/* ---------- Garden decorations ---------- */
+.garden{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.garden svg{position:absolute;display:block}
+.g-tr{top:0;right:0;width:clamp(150px,27vw,330px)}
+.g-bl{bottom:0;left:0;width:clamp(120px,21vw,270px)}
+.g-br{bottom:0;right:0;width:clamp(90px,15vw,190px)}
+#home,#chat{position:relative;z-index:1}
+body.in-chat .garden{opacity:.5}
+@media(max-width:700px){.g-br{display:none}.g-bl{opacity:.75}}
+.sway{transform-box:fill-box;animation:sway 7s ease-in-out infinite}
+.sway.o-tr{transform-origin:100% 0}
+.sway.o-b{transform-origin:50% 100%}
+@keyframes sway{0%,100%{transform:rotate(0)}50%{transform:rotate(2.5deg)}}
+.person{box-shadow:0 4px 14px rgba(46,120,70,.08)}
+.card{position:relative;overflow:hidden}
+.card>*{position:relative;z-index:1}
+.card::after{content:"";position:absolute;right:-4px;bottom:-4px;width:84px;height:70px;background:var(--sprig) no-repeat right bottom/contain;pointer-events:none;z-index:0;opacity:.95}
+.mission-box,.sheet{background-image:var(--sprig-sm);background-repeat:no-repeat;background-position:right 4px bottom 4px;background-size:46px}
+.brand-mark{background:var(--leaf)!important}
+@media (prefers-reduced-motion: reduce){.sway{animation:none}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @media (prefers-reduced-motion: reduce){.av .eyes,.av .fig,.mic.rec,.puppet.listening::after,.typing i{animation:none}}
 </style>
 
+<div class="garden" id="garden" aria-hidden="true"></div>
 <div id="home" class="view"></div>
 <div id="chat" class="view" hidden></div>
 <div id="modal-root"></div>
@@ -457,7 +471,7 @@ function avatarSVG(c){
   const mouthC = shade(s,-55);
   return `<svg viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
   <rect width="200" height="210" fill="${a.bg}"/>
-  <circle cx="34" cy="40" r="10" fill="#fff" opacity=".35"/><circle cx="172" cy="56" r="6" fill="#fff" opacity=".35"/>
+  <g opacity=".6">${leaf(-6,34,-18,1.05,"#FFFFFF","rgba(255,255,255,0)")}${leaf(206,70,196,0.85,"#FFFFFF","rgba(255,255,255,0)")}${leaf(4,62,-50,0.6,"#FFFFFF","rgba(255,255,255,0)")}</g>${flower(178,26,6,"#FFFFFF","#FFC93C")}${flower(22,180,4.5,"#FFFFFF","#FF8FB1")}
   <g class="fig">
    ${back}
    <path d="M28 212 Q30 166 100 162 Q170 166 172 212 Z" fill="${a.shirt}"/>
@@ -693,7 +707,7 @@ function renderHome(){
   const w = el("div",{class:"wrap"});
   w.append(
     el("header",{class:"topbar"},
-      el("div",{class:"brand"}, el("div",{class:"brand-mark",html:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 11h.01M12 11h.01M15 11h.01"/></svg>'}), el("h1",{},"Talk Club")),
+      el("div",{class:"brand"}, el("div",{class:"brand-mark",html:'<svg width="26" height="26" viewBox="-20 -20 40 40">'+flower(0,0,8,"#FFFFFF","#FFC93C")+'</svg>'}), el("h1",{},"Talk Club")),
       el("button",{class:"icon-btn","aria-label":"Cài đặt",html:ICON.gear,onclick:openSettings}))
   );
   w.append(el("section",{class:"hello"},
@@ -765,7 +779,7 @@ function openChat(id){
   state.c = c; state.hist = store.get(histKey(id), []);
   state.typing = micBlocked;
   if (!state.hist.length) state.hist.push({role:"ai", text:c.greet, vi:c.greetVi, hint:c.phrases[0][0]});
-  $("#home").hidden = true; const v = $("#chat"); v.hidden = false;
+  $("#home").hidden = true; document.body.classList.add("in-chat"); const v = $("#chat"); v.hidden = false;
   renderChat();
   const last = state.hist[state.hist.length-1];
   if (settings.autoSpeak && last.role === "ai") speak(last.text, c);
@@ -773,7 +787,7 @@ function openChat(id){
 function closeChat(){
   stopSpeaking(); if (rec) try{ rec.abort(); }catch(e){} rec = null;
   state.ctl?.abort(); state.busy = false;
-  $("#chat").hidden = true; $("#home").hidden = false; renderHome(); window.scrollTo(0,0);
+  $("#chat").hidden = true; document.body.classList.remove("in-chat"); $("#home").hidden = false; renderHome(); window.scrollTo(0,0);
 }
 function renderEngineNote(){ const n = $("#engine-note"); if (n && state.c) n.textContent = ENGINE_NAME[engineInUse()]; }
 function renderChat(){
@@ -1081,6 +1095,36 @@ function openOnboarding(){
       }},"Bắt đầu"))));
   root.append(ov);
 }
+
+/* ================= Garden ================= */
+function leaf(x,y,rot,sc,fill,vein){ return `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${sc})"><path d="M0 0 C12 -16 38 -16 54 0 C38 16 12 16 0 0Z" fill="${fill}"/><path d="M3 0 Q28 -2 50 0" stroke="${vein}" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>`; }
+function flower(x,y,r,petal,center){ let p=""; for (let i=0;i<5;i++) p+=`<ellipse cx="0" cy="${-r}" rx="${(r*0.62).toFixed(1)}" ry="${r}" transform="rotate(${i*72})" fill="${petal}"/>`; return `<g transform="translate(${x} ${y})">${p}<circle r="${(r*0.55).toFixed(1)}" fill="${center}"/></g>`; }
+function renderGarden(){
+  const G="#4CB86B", D="#2F8F4E", L="#9BD77E", V="#2A7A43", P="#FF8FB1", Y="#FFC93C", C="#FF6B4A", W="#FFFFFF";
+  const vineLeaves=[[268,24,160,1,G],[242,44,205,0.9,L],[214,70,150,1,G],[192,92,212,0.85,D],[160,106,158,0.95,L],[134,126,205,0.9,G],[112,150,150,0.85,D],[88,174,210,0.8,L],[62,192,168,0.75,G]];
+  const tr=`<svg class="g-tr" viewBox="0 0 300 250"><g class="sway o-tr">
+    <path d="M300 8 C240 30 222 82 172 102 C122 122 112 172 58 196" stroke="${V}" stroke-width="3" fill="none" stroke-linecap="round"/>
+    ${vineLeaves.map(a=>leaf(a[0],a[1],a[2],a[3],a[4],V)).join("")}
+    ${leaf(304,-6,128,2.3,G,V)}${leaf(304,34,168,1.8,L,V)}${leaf(286,-8,100,1.6,D,"#7FD39A")}
+    ${flower(232,60,10,P,Y)}${flower(150,114,8,Y,C)}${flower(80,184,9,P,Y)}${flower(268,92,7,W,Y)}</g></svg>`;
+  const stems=[["M70 196 C58 150 40 124 30 92",30,90,12,P],["M70 196 C82 144 102 112 122 82",122,80,11,Y],["M70 196 C70 152 68 120 72 60",72,58,13,C]];
+  const bl=`<svg class="g-bl" viewBox="0 0 260 250"><g class="sway o-b">
+    ${stems.map(([d])=>`<path d="${d}" stroke="${V}" stroke-width="3" fill="none" stroke-linecap="round"/>`).join("")}
+    ${leaf(52,150,-125,0.8,G,V)}${leaf(88,130,-55,0.8,L,V)}${leaf(70,110,-100,0.7,D,"#7FD39A")}${leaf(44,118,-140,0.6,L,V)}${leaf(104,106,-35,0.6,G,V)}
+    ${stems.map(s=>flower(s[1],s[2],s[3],s[4],s[4]===Y?C:Y)).join("")}</g>
+    <path d="M30 202 L110 202 L100 250 L40 250 Z" fill="#E8875A"/><rect x="24" y="192" width="92" height="14" rx="6" fill="#F29A6B"/>
+    ${[150,166,184,214,236].map((x,i)=>`<path d="M${x} 250 Q${x-6} ${226-i%2*8} ${x+4} ${206-i%3*6}" stroke="${i%2?G:L}" stroke-width="4" fill="none" stroke-linecap="round"/>`).join("")}
+    ${flower(176,214,7,W,Y)}${flower(206,204,6,P,Y)}${flower(238,218,7,W,C)}</svg>`;
+  const br=`<svg class="g-br" viewBox="0 0 200 200"><g class="sway o-b">
+    ${leaf(200,200,-140,1.9,G,V)}${leaf(200,200,-115,1.6,L,V)}${leaf(200,200,-165,1.5,D,"#7FD39A")}${leaf(150,200,-100,1.2,G,V)}
+    ${flower(130,96,9,P,Y)}${flower(170,70,7,Y,C)}</g></svg>`;
+  $("#garden").innerHTML = tr + bl + br;
+  const sprig = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100">${leaf(124,104,-150,1.1,"#9BD77E","#4CB86B")}${leaf(124,104,-118,0.95,"#4CB86B","#2A7A43")}${leaf(124,104,-178,0.8,"#C5EBAE","#4CB86B")}${flower(70,72,7,"#FF8FB1","#FFC93C")}${flower(98,40,5.5,"#FFC93C","#FF6B4A")}</svg>`;
+  const small = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100" opacity=".55">${leaf(124,104,-140,1.1,"#9BD77E","#4CB86B")}${leaf(124,104,-170,0.85,"#C5EBAE","#4CB86B")}${flower(80,70,7,"#FFB4CB","#FFC93C")}</svg>`;
+  document.documentElement.style.setProperty("--sprig", `url("data:image/svg+xml,${encodeURIComponent(sprig)}")`);
+  document.documentElement.style.setProperty("--sprig-sm", `url("data:image/svg+xml,${encodeURIComponent(small)}")`);
+}
+renderGarden();
 
 /* ================= Boot ================= */
 if (!profile){ profile = {name:"Friend", level:2}; renderHome(); openOnboarding(); }
